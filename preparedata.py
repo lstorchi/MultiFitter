@@ -236,5 +236,8 @@ if __name__ == "__main__":
     yfit = np.array(y_flat)
     print(f"Finished flattening data for modelling. Total data points: {len(Xraw)}")
 
-
+    print("Saving data for modelling...")
+    np.savez("modelling_data.npz", 
+             Xraw=Xraw, yraw=yraw, 
+             Xfit=Xfit, yfit=yfit)
 
