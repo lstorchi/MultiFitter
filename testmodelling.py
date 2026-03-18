@@ -12,6 +12,7 @@ try:
 except Exception as e:
     print(f"Error listing directory: {e}")
 
+print(f"Starting to read raw data from {rootpath_raw}...")
 allvalues_raw = []
 v1v2pair_raw = set()
 for fname in listing:
@@ -61,7 +62,7 @@ for fname in listing:
             print(f"Warning: {fname} does not match the pattern v{v1dir}v{v2dir}")
     else:
         print(f"Warning: {fname} is a file") 
-
+print(f"Finished reading raw data from {rootpath_raw}. Total v1v2 pairs: {len(v1v2pair_raw)}")
 
 rootpath_fitted = "./data/fitted"
 LINEDIM = 20
@@ -72,6 +73,7 @@ try:
 except Exception as e:
     print(f"Error listing directory: {e}")
 
+print(f"Starting to read fitted data from {rootpath_fitted}...")
 allvalues_fitted = []
 v1v2pair_fitted = set()
 for fname in listing:
@@ -132,14 +134,16 @@ for fname in listing:
             print(f"Warning: {fname} does not match the pattern v{v1dir}v{v2dir}")
     else:
         print(f"Warning: {fname} is a file") 
-
-
+print(f"Finished reading fitted data from {rootpath_fitted}. Total v1v2 pairs: {len(v1v2pair_fitted)}")
 
 assert v1v2pair_raw == v1v2pair_fitted, f"v1v2pair_raw: {v1v2pair_raw}, v1v2pair_fitted: {v1v2pair_fitted}"
 
 v1v2pair = sorted(list(v1v2pair_raw))
-print(f"v1v2pair: {v1v2pair}")
+for v1, v2 in v1v2pair:
+    print(f"v1: {v1}, v2: {v2}")
 
+print(f"Total v1v2 pairs: {len(v1v2pair)}")
+print("Starting to organize data for modelling...")
 data = {}
 for v1, v2 in v1v2pair:
     raw_j1j2 = []
@@ -157,7 +161,6 @@ for v1, v2 in v1v2pair:
     for j1, j2 in raw_j1j2:
         data[(v1, v2, j1, j2)] = {}
 
-
 for v1, v2, j1, j2  in data.keys():
     for iv1, iv2, ij1, ij2, infileval in allvalues_raw:
         if iv1 == v1 and iv2 == v2 and ij1 == j1 and ij2 == j2:
@@ -168,15 +171,17 @@ for v1, v2, j1, j2  in data.keys():
         if iv1 == v1 and iv2 == v2 and ij1 == j1 and ij2 == j2:
             data[(v1, v2, j1, j2)]["fitted"] = coeffs
             break
+print(f"Finished organizing data for modelling. Total data points: {len(data)}")
 
+print("Starting to generate fitted curves and organize data for modelling...")
 Xraw = []
 Xfit = []
 yraw = []
 yfit = []
 for v1, v2,j1, j2 in data.keys():
-    rawe = [x[0] for x in data[(iv1, iv2, ij1, ij2)]["raw"]]
-    rawc = [x[1] for x in data[(iv1, iv2, ij1, ij2)]["raw"]]
-    icoeffs = data[(iv1, iv2, ij1, ij2)]["fitted"]
+    rawe = [x[0] for x in data[(v1, v2, j1, j2)]["raw"]]
+    rawc = [x[1] for x in data[(v1, v2, j1, j2)]["raw"]]
+    icoeffs = data[(v1, v2, j1, j2)]["fitted"]
     e0 = icoeffs[0] 
     coeffs = icoeffs[1:]
     fite, fitc, cd = cu.generate_fitted_curve(e0, coeffs) 
@@ -185,11 +190,11 @@ for v1, v2,j1, j2 in data.keys():
     yfit.append(fitc)
     Xraw.append([v1, v2, j1, j2, rawe])
     yraw.append(rawc)
+print(f"Finished generating fitted curves and organizing data for modelling. Total data points: {len(Xraw)}")
 
-
+print("Starting to flatten data for modelling...")
 X_flat = []
 y_flat = []
-
 # Iterate through your nested lists
 for x_row, y_list in zip(Xraw, yraw):
     v1, v2, j1, j2, energies = x_row
@@ -201,7 +206,6 @@ for x_row, y_list in zip(Xraw, yraw):
 
 Xraw = np.array(X_flat)
 yraw = np.array(y_flat)
-
 
 X_flat = []
 y_flat = []
@@ -217,5 +221,7 @@ for x_row, y_list in zip(Xfit, yfit):
 
 Xfit = np.array(X_flat)
 yfit = np.array(y_flat)
+print(f"Finished flattening data for modelling. Total data points: {len(Xraw)}")
+
 
 
