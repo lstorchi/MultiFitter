@@ -1,6 +1,6 @@
-# %%
 import os
 import re
+import numpy as np
 import commonutil as cu
 
 rootpath_raw = "./data/raw"
@@ -63,7 +63,6 @@ for fname in listing:
         print(f"Warning: {fname} is a file") 
 
 
-# %%
 rootpath_fitted = "./data/fitted"
 LINEDIM = 20
 # list a dir content
@@ -136,13 +135,11 @@ for fname in listing:
 
 
 
-# %%
 assert v1v2pair_raw == v1v2pair_fitted, f"v1v2pair_raw: {v1v2pair_raw}, v1v2pair_fitted: {v1v2pair_fitted}"
 
 v1v2pair = sorted(list(v1v2pair_raw))
 print(f"v1v2pair: {v1v2pair}")
 
-# %%
 data = {}
 for v1, v2 in v1v2pair:
     raw_j1j2 = []
@@ -161,7 +158,6 @@ for v1, v2 in v1v2pair:
         data[(v1, v2, j1, j2)] = {}
 
 
-# %%
 for v1, v2, j1, j2  in data.keys():
     for iv1, iv2, ij1, ij2, infileval in allvalues_raw:
         if iv1 == v1 and iv2 == v2 and ij1 == j1 and ij2 == j2:
@@ -173,34 +169,6 @@ for v1, v2, j1, j2  in data.keys():
             data[(v1, v2, j1, j2)]["fitted"] = coeffs
             break
 
-# %%
-import matplotlib.pyplot as plt
-
-v1 = 10
-v2 = 1
-j1 = 1
-j2 = 1
-
-plt.clf()
-    
-for iv1, iv2, ij1, ij2 in data.keys():
-    if (iv1, iv2) == (v1, v2) and (ij1, ij2) == (j1, j2):
-        e = [x[0] for x in data[(iv1, iv2, ij1, ij2)]["raw"]]
-        c = [x[1] for x in data[(iv1, iv2, ij1, ij2)]["raw"]]
-        plt.plot(e, c, color='orange', marker='o', linestyle='', label='Raw Data')
-        icoeffs = data[(iv1, iv2, ij1, ij2)]["fitted"]
-        e0 = icoeffs[0] 
-        coeffs = icoeffs[1:]
-        ef, cf, cd = cu.generate_fitted_curve(e0, coeffs)    
-        plt.plot(ef, cf, color='blue', linewidth=2, label='Fitted Cross Section')
-plt.xlabel("Energy (e)", fontsize=12)
-plt.ylabel("Cross Section (c)", fontsize=12)
-plt.title(f"Comparison of Fitted Curve and Raw Data for v={v1}->{v2}", fontsize=14)
-plt.grid(True, linestyle='--', alpha=0.6)   
-#plt.legend()
-plt.show()
-
-# %%
 Xraw = []
 Xfit = []
 yraw = []
@@ -218,8 +186,6 @@ for v1, v2,j1, j2 in data.keys():
     Xraw.append([v1, v2, j1, j2, rawe])
     yraw.append(rawc)
 
-# %%
-import numpy as np 
 
 X_flat = []
 y_flat = []
