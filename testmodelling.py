@@ -1,3 +1,4 @@
+import joblib
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras import layers, models, optimizers
@@ -92,4 +93,22 @@ if __name__ == "__main__":
     model.save("cross_section_transfer_model.keras")
     print("Model saved to 'cross_section_transfer_model.keras'")
 
+    # dump the training history for later analysis
+    np.savez("training_history.npz",
+             history_fit_loss=history_fit.history['loss'],
+             history_fit_val_loss=history_fit.history['val_loss'],
+             history_raw_loss=history_raw.history['loss'],
+             history_raw_val_loss=history_raw.history['val_loss'])
+    print("Training history saved to 'training_history.npz'")
 
+    # save also test and train sets for later analysis
+    np.savez("train_test_data.npz",
+             Xfit_train=Xfit_train, yfit_train=yfit_train,
+             Xfit_test=Xfit_test, yfit_test=yfit_test,
+             Xraw_train=Xraw_train, yraw_train=yraw_train,
+             Xraw_test=Xraw_test, yraw_test=yraw_test)
+    print("Train/test data saved to 'train_test_data.npz'")
+
+    # save the scaler for later use (e.g. when applying the model to new data)
+    joblib.dump(scaler, "feature_scaler.joblib")
+    print("Feature scaler saved to 'feature_scaler.joblib'")    
