@@ -76,7 +76,6 @@ if __name__ == "__main__":
         patience=5,                 # How many epochs to wait before stopping if no improvement
         min_delta=1e-6,             # Minimum change required to count as an "improvement"
         restore_best_weights=True,  # CRITICAL: Reverts the model to its best state!
-        callbacks=[early_stop], # <--- ADDED HERE
         verbose=1                   # Prints a message when early stopping is triggered
     )
 
