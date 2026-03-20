@@ -31,10 +31,10 @@ if __name__ == "__main__":
     data = np.load('modelling_data.npz')
     Xraw = data['Xraw']
     yraw = data['yraw']
-    yraw = np.log10(yraw)  # Log-transform the target variable for better learning
+    yraw = np.log10(data['yraw'] + 1e-30)
     Xfit = data['Xfit']
     yfit = data['yfit']
-    yfit = np.log10(yfit)  # Log-transform the target variable for better learning
+    yfit = np.log10(data['yfit'] + 1e-30)
     print(Xraw.shape, yraw.shape, Xfit.shape, yfit.shape)
     
     # Split fitted data for Pre-Training
