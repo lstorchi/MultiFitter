@@ -16,3 +16,7 @@ GLOBAL MODEL
 
 buildglobalmodel.py : run and build a global model using alla data 
 testglobalmodel.ipynb : read the results of testmodelling.py and run the prediction 
+
+PER v1v2 models
+
+buildperv1v2models.ipynb : run and build NN models
