@@ -9,3 +9,10 @@ preparedata.py: processes raw and coefficient-based molecular transition
                 flattens the nested structures into machine-learning-ready
                 feature and target arrays saved as a compressed .npz
                 archive.
+
+                this produce  modelling_data.npz
+
+GLOBAL MODEL
+
+buildglobalmodel.py : run and build a global model using alla data 
+testglobalmodel.ipynb : read the results of testmodelling.py and run the prediction 
