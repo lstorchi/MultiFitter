@@ -142,8 +142,8 @@ if __name__ == "__main__":
     model.compile(optimizer=optimizers.Adam(learning_rate=0.0001), loss='mse')
 
     history_raw = model.fit(
-            Xraw_selected_train_scaled, yraw_selected_train,
-            validation_data=(Xraw_selected_test_scaled, yraw_selected_test),
+            Xraw_selected_train_scaled, yraw_selected_train_scaled,
+            validation_data=(Xraw_selected_test_scaled, yraw_selected_test_scaled),
             epochs=200,
             batch_size=64, # Smaller batch size for smaller dataset
             callbacks=[early_stop],
