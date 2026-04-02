@@ -49,6 +49,15 @@ if __name__ == "__main__":
     # Remove v1 and v2 features
     Xraw_selected = Xraw_selected[:, 2:]
     Xfit_selected = Xfit_selected[:, 2:]
+    print(f"Selected data shapes (after removing v1,v2): {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")
+
+    print("\n--- Data Preprocessing ---")
+    # Log-transform the target to handle wide range of cross-sections
+    yraw_selected_safe = np.clip(yraw_selected, a_min=1e-30, a_max=None)
+    yfit_selected_safe = np.clip(yfit_selected, a_min=1e-30, a_max=None)
+    yraw_selected = np.log10(yraw_selected_safe)
+    yfit_selected = np.log10(yfit_selected_safe)
+    print("Applied log10 transformation to targets.")
 
     # Split data
     Xfit_selected_train, Xfit_selected_test, yfit_selected_train, yfit_selected_test = train_test_split(
