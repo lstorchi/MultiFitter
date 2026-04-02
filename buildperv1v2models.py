@@ -5,8 +5,11 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 
 # Standardized TensorFlow Keras imports
-from tensorflow.keras import layers, models, optimizers
-from tensorflow.keras.callbacks import EarlyStopping
+#from tensorflow.keras import layers, models, optimizers
+#from tensorflow.keras.callbacks import Early
+
+from keras import layers, models, optimizers
+from keras.callbacks import EarlyStopping
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
