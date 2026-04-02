@@ -117,12 +117,12 @@ if __name__ == "__main__":
     joblib.dump(model, 'pretrained_model.joblib')
     joblib.dump(history_fit.history, 'pretraining_history.joblib')
 
+
     print("\n--- PHASE 2: Fine-tuning on Raw Data (Partial Freezing) ---")
-    
     # 1. Freeze the early layers
     # We will leave only the last two layers trainable (the final hidden Dense layer and the Output layer)
-    for layer in model.layers[:-2]:
-        layer.trainable = False
+    #for layer in model.layers[:-2]:
+    #    layer.trainable = False
     
     model.compile(optimizer=optimizers.Adam(learning_rate=0.0001), loss='mse')
 
