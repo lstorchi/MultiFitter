@@ -5,8 +5,10 @@ import tensorflow as tf
 
 import matplotlib.pyplot as plt
 
-from tensorflow.keras import layers, models, optimizers
-from tensorflow.keras.callbacks import EarlyStopping
+#from tensorflow.keras import layers, models, optimizers
+from keras import layers, models, optimizers
+#from tensorflow.keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -107,6 +109,7 @@ if __name__ == "__main__":
     pickle.dump(scaleryfit, open('scaleryfit.pkl', 'wb'))
 
     shapes=[128, 'BN', 34, 'BN', 32, 12]
+    shapes=[512, 'BN', 256, 'BN', 256, 128, 64]
     model = build_model(Xfit_selected_train_scaled.shape[1])
 
     print("\n--- PHASE 1: Pre-training on Fitted Data ---")
