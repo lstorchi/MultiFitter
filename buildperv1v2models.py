@@ -137,9 +137,14 @@ if __name__ == "__main__":
     mape_fit_train = np.mean(np.abs((yfit_selected_train - yfit_train_pred) / (yfit_selected_train + epsilon))) * 100
     rmse_fit_test = np.sqrt(np.mean((yfit_test_pred - yfit_selected_test)**2))
     mape_fit_test = np.mean(np.abs((yfit_selected_test - yfit_test_pred) / (yfit_selected_test + epsilon))) * 100
-    
+    mae_fit_train = np.mean(np.abs(yfit_selected_train - yfit_train_pred))
+    mae_fit_test = np.mean(np.abs(yfit_selected_test - yfit_test_pred))
+    r2_fit_train = 1 - np.sum((yfit_selected_train - yfit_train_pred)**2) / np.sum((yfit_selected_train - np.mean(yfit_selected_train))**2)
+    r2_fit_test = 1 - np.sum((yfit_selected_test - yfit_test_pred)**2) / np.sum((yfit_selected_test - np.mean(yfit_selected_test))**2)
     print(f"Fitted Data - Train RMSE: {rmse_fit_train:.4f}, Test RMSE: {rmse_fit_test:.4f}")
     print(f"Fitted Data - Train MAPE: {mape_fit_train:.2f}%, Test MAPE: {mape_fit_test:.2f}%")
+    print(f"Fitted Data - Train MAE: {mae_fit_train:.4f}, Test MAE: {mae_fit_test:.4f}")
+    print(f"Fitted Data - Train R2: {r2_fit_train:.4f}, Test R2: {r2_fit_test:.4f}")
 
     # Raw Data Eval
     yraw_train_pred_scaled = model.predict(Xraw_selected_train_scaled, verbose=0).flatten()
@@ -150,8 +155,14 @@ if __name__ == "__main__":
     
     rmse_raw_train = np.sqrt(np.mean((yraw_train_pred - yraw_selected_train)**2))
     mape_raw_train = np.mean(np.abs((yraw_selected_train - yraw_train_pred) / (yraw_selected_train + epsilon))) * 100
+    mae_raw_train = np.mean(np.abs(yraw_selected_train - yraw_train_pred))
+    r2_raw_train = 1 - np.sum((yraw_selected_train - yraw_train_pred)**2) / np.sum((yraw_selected_train - np.mean(yraw_selected_train))**2)
     rmse_raw_test = np.sqrt(np.mean((yraw_test_pred - yraw_selected_test)**2))
     mape_raw_test = np.mean(np.abs((yraw_selected_test - yraw_test_pred) / (yraw_selected_test + epsilon))) * 100
+    mae_raw_test = np.mean(np.abs(yraw_selected_test - yraw_test_pred))
+    r2_raw_test = 1 - np.sum((yraw_selected_test - yraw_test_pred)**2) / np.sum((yraw_selected_test - np.mean(yraw_selected_test))**2)
     
     print(f"Raw Data - Train RMSE: {rmse_raw_train:.4f}, Test RMSE: {rmse_raw_test:.4f}")
     print(f"Raw Data - Train MAPE: {mape_raw_train:.2f}%, Test MAPE: {mape_raw_test:.2f}%")
+    print(f"Raw Data - Train MAE: {mae_raw_train:.4f}, Test MAE: {mae_raw_test:.4f}")
+    print(f"Raw Data - Train R2: {r2_raw_train:.4f}, Test R2: {r2_raw_test:.4f}")
