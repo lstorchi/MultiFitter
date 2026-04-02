@@ -117,9 +117,20 @@ if __name__ == "__main__":
     joblib.dump(model, 'pretrained_model.joblib')
     joblib.dump(history_fit.history, 'pretraining_history.joblib')
 
-    print("\n--- PHASE 2: Fine-tuning on Raw Data ---")
+    print("\n--- PHASE 2: Fine-tuning on Raw Data (Partial Freezing) ---")
+    
+    # 1. Freeze the early layers
+    # We will leave only the last two layers trainable (the final hidden Dense layer and the Output layer)
+    for layer in model.layers[:-2]:
+        layer.trainable = False
+    
     model.compile(optimizer=optimizers.Adam(learning_rate=0.0001), loss='mse')
 
+    # (Optional) Print a quick summary to verify which layers are locked
+    for i, layer in enumerate(model.layers):
+        status = "Trainable" if layer.trainable else "FROZEN"
+        print(f"Layer {i} ({layer.name}): {status}")
+    
     history_raw = model.fit(
             Xraw_selected_train_scaled, yraw_selected_train_scaled,
             validation_data=(Xraw_selected_test_scaled, yraw_selected_test_scaled),
