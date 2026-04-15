@@ -42,10 +42,38 @@ if __name__ == "__main__":
 
     # Select indices
     selectedindex = np.where((Xraw[:, 0] == v1) & (Xraw[:, 1] == v2))
-    
     Xraw_selected, yraw_selected = Xraw[selectedindex], yraw[selectedindex]
-    Xfit_selected, yfit_selected = Xfit[selectedindex], yfit[selectedindex]
     
+    selectedindex = np.where((Xfit[:, 0] == v1) & (Xfit[:, 1] == v2))
+    Xfit_selected, yfit_selected = Xfit[selectedindex], yfit[selectedindex]
+
+    j1s_fit = Xfit_selected[:, 2]
+    j2s_fit = Xfit_selected[:, 3]
+    j1s_raw = Xraw_selected[:, 2]
+    j2s_raw = Xraw_selected[:, 3]
+
+    set_j1s_fit = set(j1s_fit)
+    set_j2s_fit = set(j2s_fit)
+    set_j1s_raw = set(j1s_raw)
+    set_j2s_raw = set(j2s_raw)
+
+    assert set_j1s_fit == set_j1s_raw, "Mismatch in j1 values between raw and fit data!"
+    assert set_j2s_fit == set_j2s_raw, "Mismatch in j2 values between raw and fit data!"
+    print("Verified that j1 and j2 values match between raw and fit datasets.")
+
+    esraw = Xraw_selected[:, 2]
+    esfit = Xfit_selected[:, 2]
+    # plot esraw vs yraw_selected and esfit vs yfit_selected to verify they match
+    plt.figure(figsize=(12, 5))
+    plt.scatter(esraw, yraw_selected, alpha=0.5, color='blue', label='Raw Data')
+    plt.scatter(esfit, yfit_selected, alpha=0.5, color='orange', label='Fitted Data')   
+    plt.xlabel('es')
+    plt.ylabel('y')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('es_vs_y.png')
+    plt.close()
+
     # Remove v1 and v2 features
     Xraw_selected = Xraw_selected[:, 2:]
     Xfit_selected = Xfit_selected[:, 2:]
@@ -59,6 +87,17 @@ if __name__ == "__main__":
     yfit_selected = np.log10(yfit_selected_safe)
     print("Applied log10 transformation to targets.")
 
+    # plot es vs log10(y) to verify the transformation
+    plt.figure(figsize=(12, 5))
+    plt.scatter(esraw, yraw_selected, alpha=0.5, color='blue', label='Raw Data (log10)')
+    plt.scatter(esfit, yfit_selected, alpha=0.5, color='orange', label='Fitted Data (log10)')
+    plt.xlabel('es')
+    plt.ylabel('log10(y)')
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('es_vs_log10y.png')
+    plt.close()
+
     # Split data
     Xfit_selected_train, Xfit_selected_test, yfit_selected_train, yfit_selected_test = train_test_split(
             Xfit_selected, yfit_selected, test_size=0.2, random_state=42
@@ -66,6 +105,13 @@ if __name__ == "__main__":
     Xraw_selected_train, Xraw_selected_test, yraw_selected_train, yraw_selected_test = train_test_split(
             Xraw_selected, yraw_selected, test_size=0.2, random_state=42
         )
+
+    np.savez('train_test_data.npz',
+             Xraw_selected_train=Xraw_selected_train, yraw_selected_train=yraw_selected_train,
+             Xraw_selected_test=Xraw_selected_test, yraw_selected_test=yraw_selected_test,
+             Xfit_selected_train=Xfit_selected_train, yfit_selected_train=yfit_selected_train,
+             Xfit_selected_test=Xfit_selected_test, yfit_selected_test=yfit_selected_test,
+             )
 
     print("\n--- Scaling Data ---")
     scalerXraw = StandardScaler()
