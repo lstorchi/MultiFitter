@@ -46,12 +46,26 @@ if __name__ == "__main__":
     
     selectedindex = np.where((Xfit[:, 0] == v1) & (Xfit[:, 1] == v2))
     Xfit_selected, yfit_selected = Xfit[selectedindex], yfit[selectedindex]
-
     print(f"Selected data shapes: {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")     
 
+    print("Extract full evalues")
+    j1s_raw = np.unique(Xraw_selected[:, 2])
+    j2s_raw = np.unique(Xraw_selected[:, 3])
+
+    j1 = j1s_raw[0]
+    j2 = j2s_raw[0]
+    selectedindex = np.where((Xraw_selected[:, 2] == j1) & (Xraw_selected[:, 3] == j2))
+    Xraw_subset = Xraw_selected[selectedindex]
+    evalues = Xraw_subset[:, 4]
+    np.savez('evaluesraw.npz', evalues=evalues)
+    selectedindex = np.where((Xfit_selected[:, 2] == j1) & (Xfit_selected[:, 3] == j2))
+    Xfit_subset = Xfit_selected[selectedindex]
+    evalues_fit = Xfit_subset[:, 4]
+    np.savez('evaluesfit.npz', evalues=evalues_fit)
+    print(f"Extracted evalues for j1={j1}, j2={j2} and saved to 'evaluesraw.npz' and 'evaluesfit.npz'.")
 
     # select all value lower than 1e-9 and remove them both from y and X
-    print("\n--- Filtering out values < 1e-2 ---")
+    print("\n--- Filtering out values < 1e-1 ---")
     mask_raw = yraw_selected >= 1e-2
     mask_fit = yfit_selected >= 1e-2
     Xraw_selected = Xraw_selected[mask_raw]
@@ -59,7 +73,6 @@ if __name__ == "__main__":
     Xfit_selected = Xfit_selected[mask_fit]
     yfit_selected = yfit_selected[mask_fit]
     print(f"Data shapes after filtering out values < 1e-2: {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")
-
 
     j1s_fit = Xfit_selected[:, 2]
     j2s_fit = Xfit_selected[:, 3]
@@ -154,6 +167,19 @@ if __name__ == "__main__":
     print(f"Observed log10(y) ranges - Raw: [{minvraw_log:.2e}, {maxvraw_log:.2e}], Fit: [{minvfit_log:.2e}, {maxvfit_log:.2e}]")
 
     # Split data
+    print("\n--- Splitting Data into Train/Test ---")
+    # split by j
+    #j1s_train, j1s_test = train_test_split(list(set_j1s_raw), test_size=0.2, random_state=42)
+    #j2s_train, j2s_test = train_test_split(list(set_j2s_raw), test_size=0.2, random_state=42)
+    #raw_train_index = np.isin(Xraw_selected[:, 0], j1s_train) & np.isin(Xraw_selected[:, 1], j2s_train)
+    #raw_test_index = np.isin(Xraw_selected[:, 0], j1s_test) & np.isin(Xraw_selected[:, 1], j2s_test)
+    #Xraw_selected_train, Xraw_selected_test = Xraw_selected[raw_train_index], Xraw_selected[raw_test_index] 
+    #yraw_selected_train, yraw_selected_test = yraw_selected[raw_train_index], yraw_selected[raw_test_index] 
+    #fit_train_index = np.isin(Xfit_selected[:, 0], j1s_train) & np.isin(Xfit_selected[:, 1], j2s_train)
+    #fit_test_index = np.isin(Xfit_selected[:, 0], j1s_test) & np.isin(Xfit_selected[:, 1], j2s_test)    
+    #Xfit_selected_train, Xfit_selected_test = Xfit_selected[fit_train_index], Xfit_selected[fit_test_index]
+    #yfit_selected_train, yfit_selected_test = yfit_selected[fit_train_index], yfit_selected[fit_test_index]
+    # rendom split
     Xfit_selected_train, Xfit_selected_test, yfit_selected_train, yfit_selected_test = train_test_split(
             Xfit_selected, yfit_selected, test_size=0.2, random_state=42
         )
