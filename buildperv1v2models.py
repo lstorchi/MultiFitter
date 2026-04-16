@@ -51,14 +51,14 @@ if __name__ == "__main__":
 
 
     # select all value lower than 1e-9 and remove them both from y and X
-    print("\n--- Filtering out values < 1e-9 ---")
-    mask_raw = yraw_selected >= 1e-9
-    mask_fit = yfit_selected >= 1e-9
+    print("\n--- Filtering out values < 1e-2 ---")
+    mask_raw = yraw_selected >= 1e-2
+    mask_fit = yfit_selected >= 1e-2
     Xraw_selected = Xraw_selected[mask_raw]
     yraw_selected = yraw_selected[mask_raw]
     Xfit_selected = Xfit_selected[mask_fit]
     yfit_selected = yfit_selected[mask_fit]
-    print(f"Data shapes after filtering out values < 1e-9: {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")
+    print(f"Data shapes after filtering out values < 1e-2: {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")
 
 
     j1s_fit = Xfit_selected[:, 2]
@@ -192,10 +192,9 @@ if __name__ == "__main__":
     pickle.dump(scaleryfit, open('scaleryfit.pkl', 'wb'))
 
     # Build model using defined architecture
+    print("\n--- PHASE 1: Pre-training on Fitted Data ---")
     model_architecture = [512, 'BN', 256, 'BN', 256, 128, 64]
-    model = build_model(Xraw_selected_train_scaled.shape[1], shapes=model_architecture)
-
-    print("\n--- PHASE 1: Pre-training on Raw Data ---")
+    model = build_model(Xfit_selected_train_scaled.shape[1], shapes=model_architecture)
     model.compile(optimizer=optimizers.Adam(learning_rate=0.001), loss='mse')
 
     early_stop = EarlyStopping(
@@ -207,8 +206,8 @@ if __name__ == "__main__":
         )
 
     history_fit = model.fit(
-            Xraw_selected_train_scaled, yraw_selected_train_scaled,
-            validation_data=(Xraw_selected_test_scaled, yraw_selected_test_scaled),
+            Xfit_selected_train_scaled, yfit_selected_train_scaled,
+            validation_data=(Xfit_selected_test_scaled, yfit_selected_test_scaled),
             epochs=200,
             batch_size=256,
             callbacks=[early_stop],
@@ -219,7 +218,7 @@ if __name__ == "__main__":
     joblib.dump(history_fit.history, 'pretraining_history.joblib')
 
 
-    print("\n--- PHASE 2: Fine-tuning on Fitted Data (Partial Freezing) ---")
+    print("\n--- PHASE 2: Fine-tuning on Raw Data (Partial Freezing) ---")
     # 1. Freeze the early layers
     # We will leave only the last two layers trainable (the final hidden Dense layer and the Output layer)
     #for layer in model.layers[:-2]:
@@ -233,8 +232,8 @@ if __name__ == "__main__":
         print(f"Layer {i} ({layer.name}): {status}")
     
     history_raw = model.fit(
-            Xfit_selected_train_scaled, yfit_selected_train_scaled,
-            validation_data=(Xfit_selected_test_scaled, yfit_selected_test_scaled),
+            Xraw_selected_train_scaled, yraw_selected_train_scaled,
+            validation_data=(Xraw_selected_test_scaled, yraw_selected_test_scaled),
             epochs=200,
             batch_size=64, 
             callbacks=[early_stop],
