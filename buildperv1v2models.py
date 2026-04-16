@@ -47,6 +47,20 @@ if __name__ == "__main__":
     selectedindex = np.where((Xfit[:, 0] == v1) & (Xfit[:, 1] == v2))
     Xfit_selected, yfit_selected = Xfit[selectedindex], yfit[selectedindex]
 
+    print(f"Selected data shapes: {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")     
+
+
+    # select all value lower than 1e-9 and remove them both from y and X
+    print("\n--- Filtering out values < 1e-9 ---")
+    mask_raw = yraw_selected >= 1e-9
+    mask_fit = yfit_selected >= 1e-9
+    Xraw_selected = Xraw_selected[mask_raw]
+    yraw_selected = yraw_selected[mask_raw]
+    Xfit_selected = Xfit_selected[mask_fit]
+    yfit_selected = yfit_selected[mask_fit]
+    print(f"Data shapes after filtering out values < 1e-9: {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")
+
+
     j1s_fit = Xfit_selected[:, 2]
     j2s_fit = Xfit_selected[:, 3]
     j1s_raw = Xraw_selected[:, 2]
@@ -60,43 +74,84 @@ if __name__ == "__main__":
     assert set_j1s_fit == set_j1s_raw, "Mismatch in j1 values between raw and fit data!"
     assert set_j2s_fit == set_j2s_raw, "Mismatch in j2 values between raw and fit data!"
     print("Verified that j1 and j2 values match between raw and fit datasets.")
-
-    esraw = Xraw_selected[:, 2]
-    esfit = Xfit_selected[:, 2]
-    # plot esraw vs yraw_selected and esfit vs yfit_selected to verify they match
-    plt.figure(figsize=(12, 5))
-    plt.scatter(esraw, yraw_selected, alpha=0.5, color='blue', label='Raw Data')
-    plt.scatter(esfit, yfit_selected, alpha=0.5, color='orange', label='Fitted Data')   
+   
+    plt.figure(figsize=(24, 10))
+    minvraw = float('inf')
+    minvfit = float('inf')
+    maxvraw = float('-inf')
+    maxvfit = float('-inf')
+    for j1 in set_j1s_raw:
+        for j2 in set_j2s_raw:
+            selectedindex = np.where((Xraw_selected[:, 2] == j1) & (Xraw_selected[:, 3] == j2))
+            Xraw_subset = Xraw_selected[selectedindex]
+            yraw_subset = yraw_selected[selectedindex]
+            if np.min(yraw_subset) < minvraw:
+                minvraw = np.min(yraw_subset)
+            if np.max(yraw_subset) > maxvraw:
+                maxvraw = np.max(yraw_subset)
+            esraw = Xraw_subset[:, 4]
+            selectedindex = np.where((Xfit_selected[:, 2] == j1) & (Xfit_selected[:, 3] == j2))
+            Xfit_subset = Xfit_selected[selectedindex]
+            yfit_subset = yfit_selected[selectedindex]
+            if np.min(yfit_subset) < minvfit:
+                minvfit = np.min(yfit_subset)
+            if np.max(yfit_subset) > maxvfit:
+                maxvfit = np.max(yfit_subset)
+            esfit = Xfit_subset[:, 4]
+            plt.scatter(esraw, yraw_subset, alpha=0.5, color='orange', label='Raw Data')
+            plt.scatter(esfit, yfit_subset, linewidths=1, color='blue', label='Fitted Data')   
     plt.xlabel('es')
     plt.ylabel('y')
-    plt.legend()
+    #plt.legend()
     plt.tight_layout()
     plt.savefig('es_vs_y.png')
     plt.close()
+    print(f"Observed y ranges - Raw: [{minvraw:.2e}, {maxvraw:.2e}], Fit: [{minvfit:.2e}, {maxvfit:.2e}]")
 
     # Remove v1 and v2 features
     Xraw_selected = Xraw_selected[:, 2:]
     Xfit_selected = Xfit_selected[:, 2:]
     print(f"Selected data shapes (after removing v1,v2): {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")
 
+
     print("\n--- Data Preprocessing ---")
-    # Log-transform the target to handle wide range of cross-sections
-    yraw_selected_safe = np.clip(yraw_selected, a_min=1e-30, a_max=None)
-    yfit_selected_safe = np.clip(yfit_selected, a_min=1e-30, a_max=None)
-    yraw_selected = np.log10(yraw_selected_safe)
-    yfit_selected = np.log10(yfit_selected_safe)
+    yraw_selected = np.log10(yraw_selected)
+    yfit_selected = np.log10(yfit_selected)
     print("Applied log10 transformation to targets.")
 
     # plot es vs log10(y) to verify the transformation
-    plt.figure(figsize=(12, 5))
-    plt.scatter(esraw, yraw_selected, alpha=0.5, color='blue', label='Raw Data (log10)')
-    plt.scatter(esfit, yfit_selected, alpha=0.5, color='orange', label='Fitted Data (log10)')
+    plt.figure(figsize=(24, 10))
+    minvraw_log = float('inf')
+    maxvraw_log = float('-inf')
+    minvfit_log = float('inf')
+    maxvfit_log = float('-inf')
+    for j1 in set_j1s_raw:
+        for j2 in set_j2s_raw:
+            selectedindex = np.where((Xraw_selected[:, 0] == j1) & (Xraw_selected[:, 1] == j2))
+            Xraw_subset = Xraw_selected[selectedindex]
+            yraw_subset = yraw_selected[selectedindex]
+            esraw = Xraw_subset[:, 2]
+            selectedindex = np.where((Xfit_selected[:, 0] == j1) & (Xfit_selected[:, 1] == j2))
+            Xfit_subset = Xfit_selected[selectedindex]
+            yfit_subset = yfit_selected[selectedindex]
+            esfit = Xfit_subset[:, 2]
+            if np.min(yraw_subset) < minvraw_log:
+                minvraw_log = np.min(yraw_subset)
+            if np.max(yraw_subset) > maxvraw_log:
+                maxvraw_log = np.max(yraw_subset)
+            if np.min(yfit_subset) < minvfit_log:
+                minvfit_log = np.min(yfit_subset)
+            if np.max(yfit_subset) > maxvfit_log:
+                maxvfit_log = np.max(yfit_subset)
+            plt.scatter(esraw, yraw_subset, alpha=0.5, color='orange', label='Raw Data (log10)')
+            plt.scatter(esfit, yfit_subset, linewidths=1, color='blue', label='Fitted Data (log10)')
     plt.xlabel('es')
     plt.ylabel('log10(y)')
-    plt.legend()
+    #plt.legend()
     plt.tight_layout()
     plt.savefig('es_vs_log10y.png')
     plt.close()
+    print(f"Observed log10(y) ranges - Raw: [{minvraw_log:.2e}, {maxvraw_log:.2e}], Fit: [{minvfit_log:.2e}, {maxvfit_log:.2e}]")
 
     # Split data
     Xfit_selected_train, Xfit_selected_test, yfit_selected_train, yfit_selected_test = train_test_split(
@@ -138,9 +193,9 @@ if __name__ == "__main__":
 
     # Build model using defined architecture
     model_architecture = [512, 'BN', 256, 'BN', 256, 128, 64]
-    model = build_model(Xfit_selected_train_scaled.shape[1], shapes=model_architecture)
+    model = build_model(Xraw_selected_train_scaled.shape[1], shapes=model_architecture)
 
-    print("\n--- PHASE 1: Pre-training on Fitted Data ---")
+    print("\n--- PHASE 1: Pre-training on Raw Data ---")
     model.compile(optimizer=optimizers.Adam(learning_rate=0.001), loss='mse')
 
     early_stop = EarlyStopping(
@@ -152,8 +207,8 @@ if __name__ == "__main__":
         )
 
     history_fit = model.fit(
-            Xfit_selected_train_scaled, yfit_selected_train_scaled,
-            validation_data=(Xfit_selected_test_scaled, yfit_selected_test_scaled),
+            Xraw_selected_train_scaled, yraw_selected_train_scaled,
+            validation_data=(Xraw_selected_test_scaled, yraw_selected_test_scaled),
             epochs=200,
             batch_size=256,
             callbacks=[early_stop],
@@ -164,7 +219,7 @@ if __name__ == "__main__":
     joblib.dump(history_fit.history, 'pretraining_history.joblib')
 
 
-    print("\n--- PHASE 2: Fine-tuning on Raw Data (Partial Freezing) ---")
+    print("\n--- PHASE 2: Fine-tuning on Fitted Data (Partial Freezing) ---")
     # 1. Freeze the early layers
     # We will leave only the last two layers trainable (the final hidden Dense layer and the Output layer)
     #for layer in model.layers[:-2]:
@@ -178,8 +233,8 @@ if __name__ == "__main__":
         print(f"Layer {i} ({layer.name}): {status}")
     
     history_raw = model.fit(
-            Xraw_selected_train_scaled, yraw_selected_train_scaled,
-            validation_data=(Xraw_selected_test_scaled, yraw_selected_test_scaled),
+            Xfit_selected_train_scaled, yfit_selected_train_scaled,
+            validation_data=(Xfit_selected_test_scaled, yfit_selected_test_scaled),
             epochs=200,
             batch_size=64, 
             callbacks=[early_stop],
