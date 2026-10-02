@@ -37,7 +37,7 @@ if __name__ == "__main__":
     print("Data shapes:")
     print(f"Raw: {Xraw.shape}, {yraw.shape} | Fit: {Xfit.shape}, {yfit.shape}")
 
-    v1, v2 = 10, 0
+    v1, v2 = 9, 5
     print(f"\n--- Processing for v1={v1}, v2={v2} ---")
 
     # Select indices
