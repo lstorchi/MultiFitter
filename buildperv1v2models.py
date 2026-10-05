@@ -33,7 +33,8 @@ if __name__ == "__main__":
 
     filename  = 'modelling_data.npz'
     v1, v2 = 9, 5
-    cutoff = False
+    cutoff = True
+    cutval = 1.0e-12
 
     if len(sys.argv) > 1:
         filename = sys.argv[1]
@@ -79,7 +80,6 @@ if __name__ == "__main__":
 
     # select all values lower than cutval and remove them both from y and X
     if cutoff:
-        cutval = 1.0e-3
         print(f"\n--- Filtering out values < {cutval:8.2e} ---")
         mask_raw = yraw_selected >= cutval
         mask_fit = yfit_selected >= cutval
