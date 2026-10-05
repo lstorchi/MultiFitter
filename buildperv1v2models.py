@@ -14,7 +14,7 @@ from keras.callbacks import EarlyStopping
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-def build_model(input_dim, shapes=[512, 'BN', 256, 'BN', 256, 128, 64]):
+def build_model(input_dim, shapes=[64, 64]):
     model = models.Sequential()
     model.add(layers.InputLayer(input_shape=(input_dim,)))
     
@@ -64,15 +64,16 @@ if __name__ == "__main__":
     np.savez('evaluesfit.npz', evalues=evalues_fit)
     print(f"Extracted evalues for j1={j1}, j2={j2} and saved to 'evaluesraw.npz' and 'evaluesfit.npz'.")
 
-    # select all value lower than 1e-9 and remove them both from y and X
-    print("\n--- Filtering out values < 1e-1 ---")
-    mask_raw = yraw_selected >= 1e-2
-    mask_fit = yfit_selected >= 1e-2
+    # select all values lower than cutval and remove them both from y and X
+    cutval = 1.0e-3
+    print(f"\n--- Filtering out values < {cutval:8.2e} ---")
+    mask_raw = yraw_selected >= cutval
+    mask_fit = yfit_selected >= cutval
     Xraw_selected = Xraw_selected[mask_raw]
     yraw_selected = yraw_selected[mask_raw]
     Xfit_selected = Xfit_selected[mask_fit]
     yfit_selected = yfit_selected[mask_fit]
-    print(f"Data shapes after filtering out values < 1e-2: {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")
+    print(f"Data shapes after filtering out values < {cutval:8.2e}: {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")
 
     j1s_fit = Xfit_selected[:, 2]
     j2s_fit = Xfit_selected[:, 3]
