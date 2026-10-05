@@ -1,3 +1,4 @@
+import sys
 import joblib
 import pickle
 import numpy as np
@@ -14,7 +15,7 @@ from keras.callbacks import EarlyStopping
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-def build_model(input_dim, shapes=[64, 64]):
+def build_model(input_dim, shapes=[64, 64, 'BN', 32, 32, 16, 8]):
     model = models.Sequential()
     model.add(layers.InputLayer(input_shape=(input_dim,)))
     
@@ -25,19 +26,31 @@ def build_model(input_dim, shapes=[64, 64]):
             model.add(layers.Dense(shape, activation='relu'))
             
     model.add(layers.Dense(1))  # Single linear output for regression
+    
     return model
 
 if __name__ == "__main__":
 
+    filename  = 'modelling_data.npz'
+    v1, v2 = 9, 5
+    cutoff = False
+
+    if len(sys.argv) > 1:
+        filename = sys.argv[1]
+    if len(sys.argv) > 3:
+        v1 = int(sys.argv[2])
+        v2 = int(sys.argv[3])
+    if len(sys.argv) > 4:
+        cutoff = bool(int(sys.argv[4]))
+
     print("\n--- Loading Data ---")
-    data = np.load('modelling_data.npz')
+    data = np.load(filename)
     Xraw, yraw = data['Xraw'], data['yraw']
     Xfit, yfit = data['Xfit'], data['yfit']
     
     print("Data shapes:")
     print(f"Raw: {Xraw.shape}, {yraw.shape} | Fit: {Xfit.shape}, {yfit.shape}")
 
-    v1, v2 = 9, 5
     print(f"\n--- Processing for v1={v1}, v2={v2} ---")
 
     # Select indices
@@ -65,15 +78,16 @@ if __name__ == "__main__":
     print(f"Extracted evalues for j1={j1}, j2={j2} and saved to 'evaluesraw.npz' and 'evaluesfit.npz'.")
 
     # select all values lower than cutval and remove them both from y and X
-    cutval = 1.0e-3
-    print(f"\n--- Filtering out values < {cutval:8.2e} ---")
-    mask_raw = yraw_selected >= cutval
-    mask_fit = yfit_selected >= cutval
-    Xraw_selected = Xraw_selected[mask_raw]
-    yraw_selected = yraw_selected[mask_raw]
-    Xfit_selected = Xfit_selected[mask_fit]
-    yfit_selected = yfit_selected[mask_fit]
-    print(f"Data shapes after filtering out values < {cutval:8.2e}: {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")
+    if cutoff:
+        cutval = 1.0e-3
+        print(f"\n--- Filtering out values < {cutval:8.2e} ---")
+        mask_raw = yraw_selected >= cutval
+        mask_fit = yfit_selected >= cutval
+        Xraw_selected = Xraw_selected[mask_raw]
+        yraw_selected = yraw_selected[mask_raw]
+        Xfit_selected = Xfit_selected[mask_fit]
+        yfit_selected = yfit_selected[mask_fit]
+        print(f"Data shapes after filtering out values < {cutval:8.2e}: {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")
 
     j1s_fit = Xfit_selected[:, 2]
     j2s_fit = Xfit_selected[:, 3]
