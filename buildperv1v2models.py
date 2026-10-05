@@ -220,7 +220,7 @@ if __name__ == "__main__":
 
     # Build model using defined architecture
     print("\n--- PHASE 1: Pre-training on Fitted Data ---")
-    model_architecture = [512, 'BN', 256, 'BN', 256, 128, 64]
+    model_architecture = [64, 64]
     model = build_model(Xfit_selected_train_scaled.shape[1], shapes=model_architecture)
     model.compile(optimizer=optimizers.Adam(learning_rate=0.001), loss='mse')
 
@@ -247,9 +247,9 @@ if __name__ == "__main__":
 
     print("\n--- PHASE 2: Fine-tuning on Raw Data (Partial Freezing) ---")
     # 1. Freeze the early layers
-    # We will leave only the last two layers trainable (the final hidden Dense layer and the Output layer)
-    #for layer in model.layers[:-2]:
-    #    layer.trainable = False
+    # We will leave only the last layer trainable (the final hidden Dense layer and the Output layer)
+    for layer in model.layers[:-1]:  # Freeze all layers except the last one
+        layer.trainable = False
     
     model.compile(optimizer=optimizers.Adam(learning_rate=0.0001), loss='mse')
 
