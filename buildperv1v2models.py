@@ -80,13 +80,23 @@ if __name__ == "__main__":
 
     # select all values lower than cutval and remove them both from y and X
     if cutoff:
+
+        print(f"\n--- Reducing fitted data points for v1={v1}, v2={v2} ---")
+        print(f"Original fitted data shape: {Xfit_selected.shape}, {yfit_selected.shape}")
+        es_vals = np.unique(Xfit_selected[:, 4])
+        keep_es = np.union1d(es_vals[es_vals < 300][::3],   # denser through the threshold rise
+                                           es_vals[::15])                  # coarser elsewhere
+        Xfit_selected, yfit_selected = Xfit_selected[np.isin(Xfit_selected[:, 4], keep_es)], \
+                    yfit_selected[np.isin(Xfit_selected[:, 4], keep_es)]
+        print(f"Reduced fitted data shape: {Xfit_selected.shape}, {yfit_selected.shape}")
+        
         nz = yraw_selected[yraw_selected > 0]
         print("zeros:", np.sum(yraw_selected == 0), "of", len(yraw_selected))
         print("smallest nonzero values:", np.unique(np.round(nz, 8))[:10])
         for lo, hi in [(0, 300), (300, 800), (800, 1e9)]:
             s = (Xraw_selected[:, 4] >= lo) & (Xraw_selected[:, 4] < hi) & (yraw_selected > 0)
             print(f"es in [{lo}, {hi}): smallest nonzero {yraw_selected[s].min():.3e}")
-            
+
         print(f"\n Min and Max values before filtering: Raw: [{np.min(yraw_selected):.2e}, {np.max(yraw_selected):.2e}], Fit: [{np.min(yfit_selected):.2e}, {np.max(yfit_selected):.2e}]")
         print(f"\n--- Filtering out values < {cutval:8.2e} ---")
         mask_raw = yraw_selected >= cutval
