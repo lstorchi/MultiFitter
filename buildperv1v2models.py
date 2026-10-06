@@ -80,6 +80,13 @@ if __name__ == "__main__":
 
     # select all values lower than cutval and remove them both from y and X
     if cutoff:
+        nz = yraw_selected[yraw_selected > 0]
+        print("zeros:", np.sum(yraw_selected == 0), "of", len(yraw_selected))
+        print("smallest nonzero values:", np.unique(np.round(nz, 8))[:10])
+        for lo, hi in [(0, 300), (300, 800), (800, 1e9)]:
+            s = (Xraw_selected[:, 4] >= lo) & (Xraw_selected[:, 4] < hi) & (yraw_selected > 0)
+            print(f"es in [{lo}, {hi}): smallest nonzero {yraw_selected[s].min():.3e}")
+            
         print(f"\n Min and Max values before filtering: Raw: [{np.min(yraw_selected):.2e}, {np.max(yraw_selected):.2e}], Fit: [{np.min(yfit_selected):.2e}, {np.max(yfit_selected):.2e}]")
         print(f"\n--- Filtering out values < {cutval:8.2e} ---")
         mask_raw = yraw_selected >= cutval
