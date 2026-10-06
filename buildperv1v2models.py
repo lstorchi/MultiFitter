@@ -34,7 +34,7 @@ if __name__ == "__main__":
     filename  = 'modelling_data.npz'
     v1, v2 = 9, 5
     cutoff = True
-    cutval = 1.0e-12
+    cutval = 1.0e-2
 
     if len(sys.argv) > 1:
         filename = sys.argv[1]
@@ -80,6 +80,7 @@ if __name__ == "__main__":
 
     # select all values lower than cutval and remove them both from y and X
     if cutoff:
+        print(f"\n Min and Max values before filtering: Raw: [{np.min(yraw_selected):.2e}, {np.max(yraw_selected):.2e}], Fit: [{np.min(yfit_selected):.2e}, {np.max(yfit_selected):.2e}]")
         print(f"\n--- Filtering out values < {cutval:8.2e} ---")
         mask_raw = yraw_selected >= cutval
         mask_fit = yfit_selected >= cutval
@@ -88,6 +89,7 @@ if __name__ == "__main__":
         Xfit_selected = Xfit_selected[mask_fit]
         yfit_selected = yfit_selected[mask_fit]
         print(f"Data shapes after filtering out values < {cutval:8.2e}: {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")
+        print(f"Min and Max values after filtering: Raw: [{np.min(yraw_selected):.2e}, {np.max(yraw_selected):.2e}], Fit: [{np.min(yfit_selected):.2e}, {np.max(yfit_selected):.2e}]")
 
     j1s_fit = Xfit_selected[:, 2]
     j2s_fit = Xfit_selected[:, 3]
@@ -262,7 +264,7 @@ if __name__ == "__main__":
     print("\n--- PHASE 2: Fine-tuning on Raw Data (Partial Freezing) ---")
     # 1. Freeze the early layers
     # We will leave only the last layer trainable (the final hidden Dense layer and the Output layer)
-    for layer in model.layers[:-1]:  # Freeze all layers except the last one
+    for layer in model.layers[:-2]:  # Freeze all layers except the last one
         layer.trainable = False
     
     model.compile(optimizer=optimizers.Adam(learning_rate=0.0001), loss='mse')
