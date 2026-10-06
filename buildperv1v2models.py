@@ -81,6 +81,8 @@ if __name__ == "__main__":
     # select all values lower than cutval and remove them both from y and X
     if cutoff:
 
+        # to reduce fitted grid points, we will keep all values below 300 eV and then every 15th value above 300 eV
+        """
         print(f"\n--- Reducing fitted data points for v1={v1}, v2={v2} ---")
         print(f"Original fitted data shape: {Xfit_selected.shape}, {yfit_selected.shape}")
         es_vals = np.unique(Xfit_selected[:, 4])
@@ -89,6 +91,7 @@ if __name__ == "__main__":
         Xfit_selected, yfit_selected = Xfit_selected[np.isin(Xfit_selected[:, 4], keep_es)], \
                     yfit_selected[np.isin(Xfit_selected[:, 4], keep_es)]
         print(f"Reduced fitted data shape: {Xfit_selected.shape}, {yfit_selected.shape}")
+        """
         
         nz = yraw_selected[yraw_selected > 0]
         print("zeros:", np.sum(yraw_selected == 0), "of", len(yraw_selected))
