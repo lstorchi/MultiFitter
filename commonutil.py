@@ -106,3 +106,43 @@ def generate_fitted_curve(e0, coeffs, e1=0.0, e2=900.0):
         csders.append(csder)
 
     return energies, csfits, csders
+
+def generate_fitted_curve_onagrid(e0, coeffs, evalues):
+    """
+    Generates the excitation function and derivative over an energy grid.
+    Translates the Fortran loops and uses the legpol/legder functions.
+    """
+    nleg = len(coeffs)
+    delta = evalues[-1] - evalues[0]
+    
+    # Calculate starting and ending indices based on e0 
+    ie0 = int(round(e0 * 1000.0))
+    ie1 = int(round(e0 * 10.0)) + 1
+    ie2 = ie1 * 100 - 1
+    
+    energies = []
+    csfits = []
+    csders = []
+    
+    # --- FIRST LOOP: Fine energy grid (step of 0.001) --- 
+    # Fortran: do ie=ie0,ie2 
+    for e in evalues:
+        
+        # Calculate normalized variable xx 
+        xx = (2.0 * e - evalues[-1] - evalues[0]) / delta  # 
+        
+        # Get polynomials and derivatives
+        pol = legpol(xx, nleg)
+        der = legder(xx, nleg)
+        
+        # Calculate fit and derivative 
+        csfit = sum(c * p for c, p in zip(coeffs, pol))
+        csder = sum(c * d for c, d in zip(coeffs, der))
+        
+        # Scale the derivative [cite: 3]
+        csder = csder * 2.0 / delta  # [cite: 3]
+        
+        csfits.append(csfit)
+        csders.append(csder)
+
+    return csfits, csders

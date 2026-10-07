@@ -76,7 +76,7 @@ if __name__ == "__main__":
     Xfit_subset = Xfit_selected[selectedindex]
     evalues_fit = Xfit_subset[:, 4]
     np.savez('evaluesfit.npz', evalues=evalues_fit)
-    print(f"Extracted evalues for j1={j1}, j2={j2} and saved to 'evaluesraw.npz' and 'evaluesfit.npz'.")
+    print(f"Before cutoff extracted evalues for j1={j1}, j2={j2} and saved to 'evaluesraw.npz' and 'evaluesfit.npz'.")
 
     # select all values lower than cutval and remove them both from y and X
     if cutoff:
@@ -125,83 +125,15 @@ if __name__ == "__main__":
     assert set_j2s_fit == set_j2s_raw, "Mismatch in j2 values between raw and fit data!"
     print("Verified that j1 and j2 values match between raw and fit datasets.")
    
-    plt.figure(figsize=(24, 10))
-    minvraw = float('inf')
-    minvfit = float('inf')
-    maxvraw = float('-inf')
-    maxvfit = float('-inf')
-    for j1 in set_j1s_raw:
-        for j2 in set_j2s_raw:
-            selectedindex = np.where((Xraw_selected[:, 2] == j1) & (Xraw_selected[:, 3] == j2))
-            Xraw_subset = Xraw_selected[selectedindex]
-            yraw_subset = yraw_selected[selectedindex]
-            if np.min(yraw_subset) < minvraw:
-                minvraw = np.min(yraw_subset)
-            if np.max(yraw_subset) > maxvraw:
-                maxvraw = np.max(yraw_subset)
-            esraw = Xraw_subset[:, 4]
-            selectedindex = np.where((Xfit_selected[:, 2] == j1) & (Xfit_selected[:, 3] == j2))
-            Xfit_subset = Xfit_selected[selectedindex]
-            yfit_subset = yfit_selected[selectedindex]
-            if np.min(yfit_subset) < minvfit:
-                minvfit = np.min(yfit_subset)
-            if np.max(yfit_subset) > maxvfit:
-                maxvfit = np.max(yfit_subset)
-            esfit = Xfit_subset[:, 4]
-            plt.scatter(esraw, yraw_subset, alpha=0.5, color='orange', label='Raw Data')
-            plt.scatter(esfit, yfit_subset, linewidths=1, color='blue', label='Fitted Data')   
-    plt.xlabel('es')
-    plt.ylabel('y')
-    #plt.legend()
-    plt.tight_layout()
-    plt.savefig('es_vs_y.png')
-    plt.close()
-    print(f"Observed y ranges - Raw: [{minvraw:.2e}, {maxvraw:.2e}], Fit: [{minvfit:.2e}, {maxvfit:.2e}]")
-
     # Remove v1 and v2 features
     Xraw_selected = Xraw_selected[:, 2:]
     Xfit_selected = Xfit_selected[:, 2:]
     print(f"Selected data shapes (after removing v1,v2): {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")
 
-
     print("\n--- Data Preprocessing ---")
     yraw_selected = np.log10(yraw_selected)
     yfit_selected = np.log10(yfit_selected)
     print("Applied log10 transformation to targets.")
-
-    # plot es vs log10(y) to verify the transformation
-    plt.figure(figsize=(24, 10))
-    minvraw_log = float('inf')
-    maxvraw_log = float('-inf')
-    minvfit_log = float('inf')
-    maxvfit_log = float('-inf')
-    for j1 in set_j1s_raw:
-        for j2 in set_j2s_raw:
-            selectedindex = np.where((Xraw_selected[:, 0] == j1) & (Xraw_selected[:, 1] == j2))
-            Xraw_subset = Xraw_selected[selectedindex]
-            yraw_subset = yraw_selected[selectedindex]
-            esraw = Xraw_subset[:, 2]
-            selectedindex = np.where((Xfit_selected[:, 0] == j1) & (Xfit_selected[:, 1] == j2))
-            Xfit_subset = Xfit_selected[selectedindex]
-            yfit_subset = yfit_selected[selectedindex]
-            esfit = Xfit_subset[:, 2]
-            if np.min(yraw_subset) < minvraw_log:
-                minvraw_log = np.min(yraw_subset)
-            if np.max(yraw_subset) > maxvraw_log:
-                maxvraw_log = np.max(yraw_subset)
-            if np.min(yfit_subset) < minvfit_log:
-                minvfit_log = np.min(yfit_subset)
-            if np.max(yfit_subset) > maxvfit_log:
-                maxvfit_log = np.max(yfit_subset)
-            plt.scatter(esraw, yraw_subset, alpha=0.5, color='orange', label='Raw Data (log10)')
-            plt.scatter(esfit, yfit_subset, linewidths=1, color='blue', label='Fitted Data (log10)')
-    plt.xlabel('es')
-    plt.ylabel('log10(y)')
-    #plt.legend()
-    plt.tight_layout()
-    plt.savefig('es_vs_log10y.png')
-    plt.close()
-    print(f"Observed log10(y) ranges - Raw: [{minvraw_log:.2e}, {maxvraw_log:.2e}], Fit: [{minvfit_log:.2e}, {maxvfit_log:.2e}]")
 
     # Split data
     print("\n--- Splitting Data into Train/Test ---")
