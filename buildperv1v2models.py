@@ -62,22 +62,6 @@ if __name__ == "__main__":
     Xfit_selected, yfit_selected = Xfit[selectedindex], yfit[selectedindex]
     print(f"Selected data shapes: {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")     
 
-    print("Extract full evalues")
-    j1s_raw = np.unique(Xraw_selected[:, 2])
-    j2s_raw = np.unique(Xraw_selected[:, 3])
-
-    j1 = j1s_raw[0]
-    j2 = j2s_raw[0]
-    selectedindex = np.where((Xraw_selected[:, 2] == j1) & (Xraw_selected[:, 3] == j2))
-    Xraw_subset = Xraw_selected[selectedindex]
-    evalues = Xraw_subset[:, 4]
-    np.savez('evaluesraw.npz', evalues=evalues)
-    selectedindex = np.where((Xfit_selected[:, 2] == j1) & (Xfit_selected[:, 3] == j2))
-    Xfit_subset = Xfit_selected[selectedindex]
-    evalues_fit = Xfit_subset[:, 4]
-    np.savez('evaluesfit.npz', evalues=evalues_fit)
-    print(f"Before cutoff extracted evalues for j1={j1}, j2={j2} and saved to 'evaluesraw.npz' and 'evaluesfit.npz'.")
-
     # select all values lower than cutval and remove them both from y and X
     if cutoff:
 
@@ -207,7 +191,6 @@ if __name__ == "__main__":
 
     joblib.dump(model, 'pretrained_model.joblib')
     joblib.dump(history_fit.history, 'pretraining_history.joblib')
-
 
     print("\n--- PHASE 2: Fine-tuning on Raw Data (Partial Freezing) ---")
     # 1. Freeze the early layers
