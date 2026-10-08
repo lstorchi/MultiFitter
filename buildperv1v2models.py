@@ -35,6 +35,7 @@ if __name__ == "__main__":
     v1, v2 = 9, 5
     cutoff = True
     cutval = 1.0e-2
+    logscale = False
 
     if len(sys.argv) > 1:
         filename = sys.argv[1]
@@ -43,6 +44,10 @@ if __name__ == "__main__":
         v2 = int(sys.argv[3])
     if len(sys.argv) > 4:
         cutoff = bool(int(sys.argv[4]))
+    if len(sys.argv) > 5:
+        cutval = float(sys.argv[5])
+    if len(sys.argv) > 6:
+        logscale = bool(int(sys.argv[6]))
 
     print("\n--- Loading Data ---")
     data = np.load(filename)
@@ -114,11 +119,11 @@ if __name__ == "__main__":
     Xfit_selected = Xfit_selected[:, 2:]
     print(f"Selected data shapes (after removing v1,v2): {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")
 
-    print("\n--- Data Preprocessing ---")
-    yraw_selected = np.log10(yraw_selected)
-    yfit_selected = np.log10(yfit_selected)
-    print("Applied log10 transformation to targets.")
-
+    if logscale:
+        print("\n--- Applying Log10 Transformation ---")
+        yraw_selected = np.log10(yraw_selected)
+        yfit_selected = np.log10(yfit_selected)
+        print("Applied log10 transformation to targets.")
 
     # Split data
     print("\n--- Splitting Data into Train/Test ---")
@@ -216,47 +221,3 @@ if __name__ == "__main__":
         
     joblib.dump(model, 'fine_tuned_model.joblib')
     joblib.dump(history_raw.history, 'fine_tuning_history.joblib')
-
-    print("\n--- Evaluating Model ---")
-    epsilon = 1e-10  # Prevent divide-by-zero in MAPE
-
-    # Fitted Data Eval
-    yfit_train_pred_scaled = model.predict(Xfit_selected_train_scaled, verbose=0).flatten()
-    yfit_test_pred_scaled = model.predict(Xfit_selected_test_scaled, verbose=0).flatten()
-    
-    yfit_train_pred = scalery.inverse_transform(yfit_train_pred_scaled.reshape(-1, 1)).flatten()
-    yfit_test_pred = scalery.inverse_transform(yfit_test_pred_scaled.reshape(-1, 1)).flatten()
-    
-    rmse_fit_train = np.sqrt(np.mean((yfit_train_pred - yfit_selected_train)**2))
-    mape_fit_train = np.mean(np.abs((yfit_selected_train - yfit_train_pred) / (yfit_selected_train + epsilon))) * 100
-    rmse_fit_test = np.sqrt(np.mean((yfit_test_pred - yfit_selected_test)**2))
-    mape_fit_test = np.mean(np.abs((yfit_selected_test - yfit_test_pred) / (yfit_selected_test + epsilon))) * 100
-    mae_fit_train = np.mean(np.abs(yfit_selected_train - yfit_train_pred))
-    mae_fit_test = np.mean(np.abs(yfit_selected_test - yfit_test_pred))
-    r2_fit_train = 1 - np.sum((yfit_selected_train - yfit_train_pred)**2) / np.sum((yfit_selected_train - np.mean(yfit_selected_train))**2)
-    r2_fit_test = 1 - np.sum((yfit_selected_test - yfit_test_pred)**2) / np.sum((yfit_selected_test - np.mean(yfit_selected_test))**2)
-    print(f"Fitted Data - Train RMSE: {rmse_fit_train:.4f}, Test RMSE: {rmse_fit_test:.4f}")
-    print(f"Fitted Data - Train MAPE: {mape_fit_train:.2f}%, Test MAPE: {mape_fit_test:.2f}%")
-    print(f"Fitted Data - Train MAE: {mae_fit_train:.4f}, Test MAE: {mae_fit_test:.4f}")
-    print(f"Fitted Data - Train R2: {r2_fit_train:.4f}, Test R2: {r2_fit_test:.4f}")
-
-    # Raw Data Eval
-    yraw_train_pred_scaled = model.predict(Xraw_selected_train_scaled, verbose=0).flatten()
-    yraw_test_pred_scaled = model.predict(Xraw_selected_test_scaled, verbose=0).flatten()
-    
-    yraw_train_pred = scalery.inverse_transform(yraw_train_pred_scaled.reshape(-1, 1)).flatten()
-    yraw_test_pred = scalery.inverse_transform(yraw_test_pred_scaled.reshape(-1, 1)).flatten()   
-    
-    rmse_raw_train = np.sqrt(np.mean((yraw_train_pred - yraw_selected_train)**2))
-    mape_raw_train = np.mean(np.abs((yraw_selected_train - yraw_train_pred) / (yraw_selected_train + epsilon))) * 100
-    mae_raw_train = np.mean(np.abs(yraw_selected_train - yraw_train_pred))
-    r2_raw_train = 1 - np.sum((yraw_selected_train - yraw_train_pred)**2) / np.sum((yraw_selected_train - np.mean(yraw_selected_train))**2)
-    rmse_raw_test = np.sqrt(np.mean((yraw_test_pred - yraw_selected_test)**2))
-    mape_raw_test = np.mean(np.abs((yraw_selected_test - yraw_test_pred) / (yraw_selected_test + epsilon))) * 100
-    mae_raw_test = np.mean(np.abs(yraw_selected_test - yraw_test_pred))
-    r2_raw_test = 1 - np.sum((yraw_selected_test - yraw_test_pred)**2) / np.sum((yraw_selected_test - np.mean(yraw_selected_test))**2)
-    
-    print(f"Raw Data - Train RMSE: {rmse_raw_train:.4f}, Test RMSE: {rmse_raw_test:.4f}")
-    print(f"Raw Data - Train MAPE: {mape_raw_train:.2f}%, Test MAPE: {mape_raw_test:.2f}%")
-    print(f"Raw Data - Train MAE: {mae_raw_train:.4f}, Test MAE: {mae_raw_test:.4f}")
-    print(f"Raw Data - Train R2: {r2_raw_train:.4f}, Test R2: {r2_raw_test:.4f}")
