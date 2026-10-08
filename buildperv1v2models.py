@@ -33,7 +33,7 @@ if __name__ == "__main__":
 
     filename  = 'modelling_data.npz'
     v1, v2 = 9, 5
-    cutoff = True
+    cutoff = False
     cutval = 1.0e-2
     logscale = False
 
