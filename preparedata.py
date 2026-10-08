@@ -192,9 +192,9 @@ if __name__ == "__main__":
         icoeffs = data[(v1, v2, j1, j2)]["fitted"]
         e0 = icoeffs[0] 
         coeffs = icoeffs[1:]
-        fite, fitc, cd = cu.generate_fitted_curve(e0, coeffs) 
+        fitc, cd = cu.generate_fitted_curve_onagrid(e0, coeffs, rawe) 
 
-        Xfit.append([v1, v2, j1, j2, fite])
+        Xfit.append([v1, v2, j1, j2, rawe])
         yfit.append(fitc)
         Xraw.append([v1, v2, j1, j2, rawe])
         yraw.append(rawc)

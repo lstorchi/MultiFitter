@@ -135,6 +135,7 @@ if __name__ == "__main__":
     yfit_selected = np.log10(yfit_selected)
     print("Applied log10 transformation to targets.")
 
+
     # Split data
     print("\n--- Splitting Data into Train/Test ---")
     # split by j
@@ -164,27 +165,22 @@ if __name__ == "__main__":
              )
 
     print("\n--- Scaling Data ---")
-    scalerXraw = StandardScaler()
-    Xraw_selected_train_scaled = scalerXraw.fit_transform(Xraw_selected_train)
-    Xraw_selected_test_scaled = scalerXraw.transform(Xraw_selected_test)
+    scalerX = StandardScaler()
+    Xraw_selected_train_scaled = scalerX.fit_transform(Xraw_selected_train)
     
-    scaleryraw = StandardScaler()
-    yraw_selected_train_scaled = scaleryraw.fit_transform(yraw_selected_train.reshape(-1, 1)).flatten()
-    yraw_selected_test_scaled = scaleryraw.transform(yraw_selected_test.reshape(-1, 1)).flatten()
-    
-    scalerXfit = StandardScaler()
-    Xfit_selected_train_scaled = scalerXfit.fit_transform(Xfit_selected_train)
-    Xfit_selected_test_scaled = scalerXfit.transform(Xfit_selected_test)
-    
-    scaleryfit = StandardScaler()
-    yfit_selected_train_scaled = scaleryfit.fit_transform(yfit_selected_train.reshape(-1, 1)).flatten()
-    yfit_selected_test_scaled = scaleryfit.transform(yfit_selected_test.reshape(-1, 1)).flatten()       
+    Xraw_selected_test_scaled = scalerX.transform(Xraw_selected_test)
+    Xfit_selected_train_scaled = scalerX.transform(Xfit_selected_train)
+    Xfit_selected_test_scaled = scalerX.transform(Xfit_selected_test)
+
+    scalery = StandardScaler()
+    yraw_selected_train_scaled = scalery.fit_transform(yraw_selected_train.reshape(-1, 1)).flatten()
+    yraw_selected_test_scaled = scalery.transform(yraw_selected_test.reshape(-1, 1)).flatten()
+    yfit_selected_train_scaled = scalery.fit_transform(yfit_selected_train.reshape(-1, 1)).flatten()
+    yfit_selected_test_scaled = scalery.transform(yfit_selected_test.reshape(-1, 1)).flatten()       
 
     # Save scalers
-    pickle.dump(scalerXraw, open('scalerXraw.pkl', 'wb'))
-    pickle.dump(scaleryraw, open('scaleryraw.pkl', 'wb'))
-    pickle.dump(scalerXfit, open('scalerXfit.pkl', 'wb'))
-    pickle.dump(scaleryfit, open('scaleryfit.pkl', 'wb'))
+    pickle.dump(scalerX, open('scalerX.pkl', 'wb'))
+    pickle.dump(scalery, open('scalery.pkl', 'wb'))
 
     # Build model using defined architecture
     print("\n--- PHASE 1: Pre-training on Fitted Data ---")
@@ -245,8 +241,8 @@ if __name__ == "__main__":
     yfit_train_pred_scaled = model.predict(Xfit_selected_train_scaled, verbose=0).flatten()
     yfit_test_pred_scaled = model.predict(Xfit_selected_test_scaled, verbose=0).flatten()
     
-    yfit_train_pred = scaleryfit.inverse_transform(yfit_train_pred_scaled.reshape(-1, 1)).flatten()
-    yfit_test_pred = scaleryfit.inverse_transform(yfit_test_pred_scaled.reshape(-1, 1)).flatten()
+    yfit_train_pred = scalery.inverse_transform(yfit_train_pred_scaled.reshape(-1, 1)).flatten()
+    yfit_test_pred = scalery.inverse_transform(yfit_test_pred_scaled.reshape(-1, 1)).flatten()
     
     rmse_fit_train = np.sqrt(np.mean((yfit_train_pred - yfit_selected_train)**2))
     mape_fit_train = np.mean(np.abs((yfit_selected_train - yfit_train_pred) / (yfit_selected_train + epsilon))) * 100
@@ -265,8 +261,8 @@ if __name__ == "__main__":
     yraw_train_pred_scaled = model.predict(Xraw_selected_train_scaled, verbose=0).flatten()
     yraw_test_pred_scaled = model.predict(Xraw_selected_test_scaled, verbose=0).flatten()
     
-    yraw_train_pred = scaleryraw.inverse_transform(yraw_train_pred_scaled.reshape(-1, 1)).flatten()
-    yraw_test_pred = scaleryraw.inverse_transform(yraw_test_pred_scaled.reshape(-1, 1)).flatten()   
+    yraw_train_pred = scalery.inverse_transform(yraw_train_pred_scaled.reshape(-1, 1)).flatten()
+    yraw_test_pred = scalery.inverse_transform(yraw_test_pred_scaled.reshape(-1, 1)).flatten()   
     
     rmse_raw_train = np.sqrt(np.mean((yraw_train_pred - yraw_selected_train)**2))
     mape_raw_train = np.mean(np.abs((yraw_selected_train - yraw_train_pred) / (yraw_selected_train + epsilon))) * 100
