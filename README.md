@@ -12,11 +12,12 @@ preparedata.py: processes raw and coefficient-based molecular transition
 
                 this produce  modelling_data.npz
 
-GLOBAL MODEL
-
-buildglobalmodel.py : run and build a global model using alla data 
-testglobalmodel.ipynb : read the results of testmodelling.py and run the prediction 
-
 PER v1v2 models
 
-buildperv1v2models.ipynb : run and build NN models
+1. Refitted model
+    
+    Feedforward neural network (MLP) regressor that is pre-trained on fitted data
+    and subsequently fine-tuned on raw data with its earlier layers frozen.
+
+    NN_build_refitted_perv1v2.py : build model
+    NN_test_refitted_perv1v2.py : read and test model

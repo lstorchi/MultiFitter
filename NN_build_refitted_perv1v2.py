@@ -15,9 +15,14 @@ from keras.callbacks import EarlyStopping
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-def build_model(input_dim, shapes=[64, 64, 'BN', 32, 32, 16, 8]):
+def make_early_stop():
+    return EarlyStopping(monitor='val_loss', patience=25, min_delta=1e-6,
+         restore_best_weights=True, verbose=1)
+
+def build_model(input_dim, shapes=[64, 64, 'BN', 32, 32, 16, 8], 
+                out_activation='softplus'):
     model = models.Sequential()
-    model.add(layers.InputLayer(input_shape=(input_dim,)))
+    model.add(layers.Input(shape=(input_dim,)))
     
     for shape in shapes:
         if shape == 'BN':
@@ -25,8 +30,7 @@ def build_model(input_dim, shapes=[64, 64, 'BN', 32, 32, 16, 8]):
         else:
             model.add(layers.Dense(shape, activation='relu'))
             
-    model.add(layers.Dense(1))  # Single linear output for regression
-    
+    model.add(layers.Dense(1, activation=out_activation))  # 'softplus' keeps predictions >= 0
     return model
 
 if __name__ == "__main__":
@@ -79,31 +83,28 @@ if __name__ == "__main__":
 
     # Split data
     print("\n--- Splitting Data into Train/Test ---")
-    # split by j
-    #j1s_train, j1s_test = train_test_split(list(set_j1s_raw), test_size=0.2, random_state=42)
-    #j2s_train, j2s_test = train_test_split(list(set_j2s_raw), test_size=0.2, random_state=42)
-    #raw_train_index = np.isin(Xraw_selected[:, 0], j1s_train) & np.isin(Xraw_selected[:, 1], j2s_train)
-    #raw_test_index = np.isin(Xraw_selected[:, 0], j1s_test) & np.isin(Xraw_selected[:, 1], j2s_test)
-    #Xraw_selected_train, Xraw_selected_test = Xraw_selected[raw_train_index], Xraw_selected[raw_test_index] 
-    #yraw_selected_train, yraw_selected_test = yraw_selected[raw_train_index], yraw_selected[raw_test_index] 
-    #fit_train_index = np.isin(Xfit_selected[:, 0], j1s_train) & np.isin(Xfit_selected[:, 1], j2s_train)
-    #fit_test_index = np.isin(Xfit_selected[:, 0], j1s_test) & np.isin(Xfit_selected[:, 1], j2s_test)    
-    #Xfit_selected_train, Xfit_selected_test = Xfit_selected[fit_train_index], Xfit_selected[fit_test_index]
-    #yfit_selected_train, yfit_selected_test = yfit_selected[fit_train_index], yfit_selected[fit_test_index]
     # rendom split
-    Xfit_selected_train, Xfit_selected_test, yfit_selected_train, yfit_selected_test = train_test_split(
-            Xfit_selected, yfit_selected, test_size=0.2, random_state=42
+    Xfit_selected_train, Xfit_selected_test, \
+    Xraw_selected_train, Xraw_selected_test, \
+    yfit_selected_train, yfit_selected_test, \
+    yraw_selected_train, yraw_selected_test = train_test_split(
+            Xfit_selected, Xraw_selected, yfit_selected, yraw_selected, \
+                test_size=0.2, random_state=42
         )
-    Xraw_selected_train, Xraw_selected_test, yraw_selected_train, yraw_selected_test = train_test_split(
-            Xraw_selected, yraw_selected, test_size=0.2, random_state=42
-        )
-
+    
     np.savez('train_test_data.npz',
              Xraw_selected_train=Xraw_selected_train, yraw_selected_train=yraw_selected_train,
              Xraw_selected_test=Xraw_selected_test, yraw_selected_test=yraw_selected_test,
              Xfit_selected_train=Xfit_selected_train, yfit_selected_train=yfit_selected_train,
              Xfit_selected_test=Xfit_selected_test, yfit_selected_test=yfit_selected_test,
              )
+    
+    Xfit_selected_train, Xfit_selected_val, \
+    Xraw_selected_train, Xraw_selected_val, \
+    yfit_selected_train, yfit_selected_val, \
+    yraw_selected_train, yraw_selected_val = train_test_split(
+            Xfit_selected_train, Xraw_selected_train, yfit_selected_train, yraw_selected_train,
+            test_size=0.15, random_state=42)
 
     print("\n--- Scaling Data ---")
     scalerX = StandardScaler().fit(Xraw_selected_train)
@@ -111,37 +112,37 @@ if __name__ == "__main__":
     Xraw_selected_test_scaled  = scalerX.transform(Xraw_selected_test)
     Xfit_selected_train_scaled = scalerX.transform(Xfit_selected_train)
     Xfit_selected_test_scaled  = scalerX.transform(Xfit_selected_test)
+    Xraw_selected_val_scaled = scalerX.transform(Xraw_selected_val)
+    Xfit_selected_val_scaled = scalerX.transform(Xfit_selected_val)
 
     scalery = StandardScaler(with_mean=False).fit(yfit_selected_train.reshape(-1, 1))
     yfit_selected_train_scaled = scalery.transform(yfit_selected_train.reshape(-1, 1)).ravel()
     yfit_selected_test_scaled  = scalery.transform(yfit_selected_test.reshape(-1, 1)).ravel()
     yraw_selected_train_scaled = scalery.transform(yraw_selected_train.reshape(-1, 1)).flatten()
     yraw_selected_test_scaled = scalery.transform(yraw_selected_test.reshape(-1, 1)).flatten()
+    yfit_selected_val_scaled = scalery.transform(yfit_selected_val.reshape(-1, 1)).ravel()
+    yraw_selected_val_scaled = scalery.transform(yraw_selected_val.reshape(-1, 1)).ravel()
 
     # Save scalers
-    pickle.dump(scalerX, open('scalerX.pkl', 'wb'))
-    pickle.dump(scalery, open('scalery.pkl', 'wb'))
+    with open('scalerX.pkl', 'wb') as fh:
+        pickle.dump(scalerX, fh)
+    with open('scalery.pkl', 'wb') as fh:
+        pickle.dump(scalery, fh)
 
     # Build model using defined architecture
     print("\n--- PHASE 1: Pre-training on Fitted Data ---")
     model_architecture = [64, 64]
-    model = build_model(Xfit_selected_train_scaled.shape[1], shapes=model_architecture)
+    model = build_model(Xfit_selected_train_scaled.shape[1], shapes=model_architecture, 
+                            out_activation='softplus')
     model.compile(optimizer=optimizers.Adam(learning_rate=0.001), loss='mse')
-
-    early_stop = EarlyStopping(
-            monitor='val_loss',         
-            patience=5,                 
-            min_delta=1e-6,             
-            restore_best_weights=True,  
-            verbose=1                   
-        )
 
     history_fit = model.fit(
             Xfit_selected_train_scaled, yfit_selected_train_scaled,
-            validation_data=(Xfit_selected_test_scaled, yfit_selected_test_scaled),
-            epochs=200,
+            validation_data=(Xfit_selected_val_scaled, \
+                             yfit_selected_val_scaled),
+            epochs=500,
             batch_size=256,
-            callbacks=[early_stop],
+            callbacks=[make_early_stop()],
             verbose=1
         )
 
@@ -151,7 +152,7 @@ if __name__ == "__main__":
     print("\n--- PHASE 2: Fine-tuning on Raw Data (Partial Freezing) ---")
     # 1. Freeze the early layers
     # We will leave only the last layer trainable (the final hidden Dense layer and the Output layer)
-    for layer in model.layers[:-2]:  # Freeze all layers except the last one
+    for layer in model.layers[:-2]:  
         layer.trainable = False
     
     model.compile(optimizer=optimizers.Adam(learning_rate=0.0001), loss='mse')
@@ -163,10 +164,11 @@ if __name__ == "__main__":
     
     history_raw = model.fit(
             Xraw_selected_train_scaled, yraw_selected_train_scaled,
-            validation_data=(Xraw_selected_test_scaled, yraw_selected_test_scaled),
-            epochs=200,
+            validation_data=(Xraw_selected_val_scaled, \
+                             yraw_selected_val_scaled),
+            epochs=500,
             batch_size=64, 
-            callbacks=[early_stop],
+            callbacks=[make_early_stop()],
             verbose=1
         )
         
