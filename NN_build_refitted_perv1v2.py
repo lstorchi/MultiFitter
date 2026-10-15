@@ -151,8 +151,8 @@ if __name__ == "__main__":
 
     print("\n--- PHASE 2: Fine-tuning on Raw Data (Partial Freezing) ---")
     # 1. Freeze the early layers
-    # We will leave only the last layer trainable (the final hidden Dense layer and the Output layer)
-    for layer in model.layers[:-2]:  
+    n_trainable = 2   # layers left trainable, counted from the output (1 = output layer only)
+    for layer in model.layers[:-n_trainable]:
         layer.trainable = False
     
     model.compile(optimizer=optimizers.Adam(learning_rate=0.0001), loss='mse')
