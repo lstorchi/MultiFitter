@@ -33,21 +33,12 @@ if __name__ == "__main__":
 
     filename  = 'modelling_data.npz'
     v1, v2 = 9, 5
-    cutoff = False
-    cutval = 1.0e-2
-    logscale = False
 
     if len(sys.argv) > 1:
         filename = sys.argv[1]
     if len(sys.argv) > 3:
         v1 = int(sys.argv[2])
         v2 = int(sys.argv[3])
-    if len(sys.argv) > 4:
-        cutoff = bool(int(sys.argv[4]))
-    if len(sys.argv) > 5:
-        cutval = float(sys.argv[5])
-    if len(sys.argv) > 6:
-        logscale = bool(int(sys.argv[6]))
 
     print("\n--- Loading Data ---")
     data = np.load(filename)
@@ -67,39 +58,6 @@ if __name__ == "__main__":
     Xfit_selected, yfit_selected = Xfit[selectedindex], yfit[selectedindex]
     print(f"Selected data shapes: {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")     
 
-    # select all values lower than cutval and remove them both from y and X
-    if cutoff:
-
-        # to reduce fitted grid points, we will keep all values below 300 eV and then every 15th value above 300 eV
-        """
-        print(f"\n--- Reducing fitted data points for v1={v1}, v2={v2} ---")
-        print(f"Original fitted data shape: {Xfit_selected.shape}, {yfit_selected.shape}")
-        es_vals = np.unique(Xfit_selected[:, 4])
-        keep_es = np.union1d(es_vals[es_vals < 300][::3],   # denser through the threshold rise
-                                           es_vals[::15])                  # coarser elsewhere
-        Xfit_selected, yfit_selected = Xfit_selected[np.isin(Xfit_selected[:, 4], keep_es)], \
-                    yfit_selected[np.isin(Xfit_selected[:, 4], keep_es)]
-        print(f"Reduced fitted data shape: {Xfit_selected.shape}, {yfit_selected.shape}")
-        """
-        
-        nz = yraw_selected[yraw_selected > 0]
-        print("zeros:", np.sum(yraw_selected == 0), "of", len(yraw_selected))
-        print("smallest nonzero values:", np.unique(np.round(nz, 8))[:10])
-        for lo, hi in [(0, 300), (300, 800), (800, 1e9)]:
-            s = (Xraw_selected[:, 4] >= lo) & (Xraw_selected[:, 4] < hi) & (yraw_selected > 0)
-            print(f"es in [{lo}, {hi}): smallest nonzero {yraw_selected[s].min():.3e}")
-
-        print(f"\n Min and Max values before filtering: Raw: [{np.min(yraw_selected):.2e}, {np.max(yraw_selected):.2e}], Fit: [{np.min(yfit_selected):.2e}, {np.max(yfit_selected):.2e}]")
-        print(f"\n--- Filtering out values < {cutval:8.2e} ---")
-        mask_raw = yraw_selected >= cutval
-        mask_fit = yfit_selected >= cutval
-        Xraw_selected = Xraw_selected[mask_raw]
-        yraw_selected = yraw_selected[mask_raw]
-        Xfit_selected = Xfit_selected[mask_fit]
-        yfit_selected = yfit_selected[mask_fit]
-        print(f"Data shapes after filtering out values < {cutval:8.2e}: {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")
-        print(f"Min and Max values after filtering: Raw: [{np.min(yraw_selected):.2e}, {np.max(yraw_selected):.2e}], Fit: [{np.min(yfit_selected):.2e}, {np.max(yfit_selected):.2e}]")
-
     j1s_fit = Xfit_selected[:, 2]
     j2s_fit = Xfit_selected[:, 3]
     j1s_raw = Xraw_selected[:, 2]
@@ -118,12 +76,6 @@ if __name__ == "__main__":
     Xraw_selected = Xraw_selected[:, 2:]
     Xfit_selected = Xfit_selected[:, 2:]
     print(f"Selected data shapes (after removing v1,v2): {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")
-
-    if logscale:
-        print("\n--- Applying Log10 Transformation ---")
-        yraw_selected = np.log10(yraw_selected)
-        yfit_selected = np.log10(yfit_selected)
-        print("Applied log10 transformation to targets.")
 
     # Split data
     print("\n--- Splitting Data into Train/Test ---")
@@ -154,18 +106,17 @@ if __name__ == "__main__":
              )
 
     print("\n--- Scaling Data ---")
-    scalerX = StandardScaler()
-    Xraw_selected_train_scaled = scalerX.fit_transform(Xraw_selected_train)
-    
-    Xraw_selected_test_scaled = scalerX.transform(Xraw_selected_test)
+    scalerX = StandardScaler().fit(Xraw_selected_train)
+    Xraw_selected_train_scaled = scalerX.transform(Xraw_selected_train)
+    Xraw_selected_test_scaled  = scalerX.transform(Xraw_selected_test)
     Xfit_selected_train_scaled = scalerX.transform(Xfit_selected_train)
-    Xfit_selected_test_scaled = scalerX.transform(Xfit_selected_test)
+    Xfit_selected_test_scaled  = scalerX.transform(Xfit_selected_test)
 
-    scalery = StandardScaler()
-    yraw_selected_train_scaled = scalery.fit_transform(yraw_selected_train.reshape(-1, 1)).flatten()
+    scalery = StandardScaler(with_mean=False).fit(yfit_selected_train.reshape(-1, 1))
+    yfit_selected_train_scaled = scalery.transform(yfit_selected_train.reshape(-1, 1)).ravel()
+    yfit_selected_test_scaled  = scalery.transform(yfit_selected_test.reshape(-1, 1)).ravel()
+    yraw_selected_train_scaled = scalery.transform(yraw_selected_train.reshape(-1, 1)).flatten()
     yraw_selected_test_scaled = scalery.transform(yraw_selected_test.reshape(-1, 1)).flatten()
-    yfit_selected_train_scaled = scalery.fit_transform(yfit_selected_train.reshape(-1, 1)).flatten()
-    yfit_selected_test_scaled = scalery.transform(yfit_selected_test.reshape(-1, 1)).flatten()       
 
     # Save scalers
     pickle.dump(scalerX, open('scalerX.pkl', 'wb'))
