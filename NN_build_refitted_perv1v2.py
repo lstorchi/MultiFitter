@@ -92,19 +92,21 @@ if __name__ == "__main__":
                 test_size=0.2, random_state=42
         )
     
-    np.savez('train_test_data.npz',
-             Xraw_selected_train=Xraw_selected_train, yraw_selected_train=yraw_selected_train,
-             Xraw_selected_test=Xraw_selected_test, yraw_selected_test=yraw_selected_test,
-             Xfit_selected_train=Xfit_selected_train, yfit_selected_train=yfit_selected_train,
-             Xfit_selected_test=Xfit_selected_test, yfit_selected_test=yfit_selected_test,
-             )
-    
     Xfit_selected_train, Xfit_selected_val, \
     Xraw_selected_train, Xraw_selected_val, \
     yfit_selected_train, yfit_selected_val, \
     yraw_selected_train, yraw_selected_val = train_test_split(
             Xfit_selected_train, Xraw_selected_train, yfit_selected_train, yraw_selected_train,
             test_size=0.15, random_state=42)
+            
+    np.savez('train_test_data.npz',
+             Xraw_selected_train=Xraw_selected_train, yraw_selected_train=yraw_selected_train,
+             Xraw_selected_test=Xraw_selected_test, yraw_selected_test=yraw_selected_test,
+             Xfit_selected_train=Xfit_selected_train, yfit_selected_train=yfit_selected_train,
+             Xfit_selected_test=Xfit_selected_test, yfit_selected_test=yfit_selected_test,
+             Xfit_selected_val=Xfit_selected_val, yfit_selected_val=yfit_selected_val,
+             Xraw_selected_val=Xraw_selected_val, yraw_selected_val=yraw_selected_val
+             )
 
     print("\n--- Scaling Data ---")
     scalerX = StandardScaler().fit(Xraw_selected_train)
