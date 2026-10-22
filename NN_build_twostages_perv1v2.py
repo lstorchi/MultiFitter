@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 #from tensorflow.keras import layers, models, optimizers
 #from tensorflow.keras.callbacks import Early
 
-from keras import layers, models, optimizers, regularizers
+from keras import layers, models, optimizers, regularizers, losses
 from keras.callbacks import EarlyStopping
 
 from sklearn.model_selection import train_test_split
@@ -64,6 +64,9 @@ if __name__ == "__main__":
     selectedindex = np.where((Xfit[:, 0] == v1) & (Xfit[:, 1] == v2))
     Xfit_selected, yfit_selected = Xfit[selectedindex], yfit[selectedindex]
     print(f"Selected data shapes: {Xraw_selected.shape}, {yraw_selected.shape} | {Xfit_selected.shape}, {yfit_selected.shape}")     
+
+    print(f"Fitted values < 0: {(yfit_selected < 0).sum()} (min {yfit_selected.min():.3e}) -> set to 0")
+    yfit_selected = np.clip(yfit_selected, 0, None)   # the functional fit undershoots below threshold
 
     j1s_fit = Xfit_selected[:, 2]
     j2s_fit = Xfit_selected[:, 3]
@@ -141,6 +144,8 @@ if __name__ == "__main__":
     S = 1e-2   # floor: relative correction above S, absolute below
     r_train = (yraw_selected_train - yfit_selected_train) / (yfit_selected_train + S)
     r_val   = (yraw_selected_val   - yfit_selected_val)   / (yfit_selected_val   + S)
+    r_train = np.clip(r_train, -0.5, 0.5)
+    r_val   = np.clip(r_val,   -0.5, 0.5)
 
     scaler_r = StandardScaler(with_mean=False).fit(r_train.reshape(-1, 1))   # keeps 0 at 0
     r_train_scaled = scaler_r.transform(r_train.reshape(-1, 1)).ravel()
@@ -177,7 +182,7 @@ if __name__ == "__main__":
     corr_architecture = [32, 32]
     corr_model = build_model(Xraw_selected_train_scaled.shape[1], shapes=corr_architecture,
                              out_activation=None, l2=1e-5, zero_output=True)
-    corr_model.compile(optimizer=optimizers.Adam(learning_rate=0.001), loss='mse')
+    corr_model.compile(optimizer=optimizers.Adam(learning_rate=0.001), loss=losses.Huber())
 
     history_corr = corr_model.fit(
             Xraw_selected_train_scaled, r_train_scaled,
