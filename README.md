@@ -25,9 +25,10 @@ PER v1v2 models
 2. Two Channels NN model
 
     A base network (64-64-1 with softplus output) is trained on the fitted curves to learn the
-    smooth functional-fit surface, and a small, zero-initialized correction network (32-32-1 with 
-    L2 regularization) is then trained on the raw data to learn the relative deviation 
+    smooth functional-fit surface, and a small, zero-initialized correction network (32-32-1 with L2 regularization) is then trained on the raw data to learn the relative deviation 
     r = (raw − fit)/(fit + s), so that the final prediction is ŷ = y_base + (y_base + s)·Δ, 
     clipped at zero.
 
+    NN_build_twochannels_perv1v2.py : build model
+    
 
