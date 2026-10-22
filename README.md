@@ -14,10 +14,20 @@ preparedata.py: processes raw and coefficient-based molecular transition
 
 PER v1v2 models
 
-1. Refitted model
+1. Refitted NN model
     
     Feedforward neural network (MLP) regressor that is pre-trained on fitted data
     and subsequently fine-tuned on raw data with its earlier layers frozen.
 
     NN_build_refitted_perv1v2.py : build model
     NN_test_refitted_perv1v2.py : read and test model
+
+2. Two Channels NN model
+
+    A base network (64-64-1 with softplus output) is trained on the fitted curves to learn the
+    smooth functional-fit surface, and a small, zero-initialized correction network (32-32-1 with 
+    L2 regularization) is then trained on the raw data to learn the relative deviation 
+    r = (raw − fit)/(fit + s), so that the final prediction is ŷ = y_base + (y_base + s)·Δ, 
+    clipped at zero.
+
+
