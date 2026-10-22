@@ -162,8 +162,13 @@ if __name__ == "__main__":
     base_model.compile(optimizer=optimizers.Adam(learning_rate=0.001), loss='mse')
 
     history_fit = base_model.fit(
-            # ... same arguments as before ...
-        )
+        Xfit_selected_train_scaled, yfit_selected_train_scaled,
+        validation_data=(Xfit_selected_val_scaled, yfit_selected_val_scaled),
+        epochs=500,
+        batch_size=256,
+        callbacks=[make_early_stop()],
+        verbose=1
+    )
 
     joblib.dump(base_model, 'base_model.joblib')
     joblib.dump(history_fit.history, 'base_history.joblib')
