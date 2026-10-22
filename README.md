@@ -30,5 +30,5 @@ PER v1v2 models
     clipped at zero.
 
     NN_build_twochannels_perv1v2.py : build model
-    
+    NN_test_twochannels_perv1v2.ipynb : read and test model
 
