@@ -33,3 +33,6 @@ PER v1v2 models
     NN_build_twostages_perv1v2.py : build model
     NN_test_twostages_perv1v2.ipynb : read and test model
 
+3.  GPR
+
+    GPR_build_perv1v2.py : build model
