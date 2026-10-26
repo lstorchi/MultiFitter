@@ -107,12 +107,25 @@ if __name__ == "__main__":
                 test_size=0.2, random_state=42
         )
     
-    Xfit_selected_train, Xfit_selected_val, \
-    Xraw_selected_train, Xraw_selected_val, \
-    yfit_selected_train, yfit_selected_val, \
-    yraw_selected_train, yraw_selected_val = train_test_split(
-            Xfit_selected_train, Xraw_selected_train, yfit_selected_train, yraw_selected_train,
-            test_size=0.15, random_state=42)
+    #Xfit_selected_train, Xfit_selected_val, \
+    #Xraw_selected_train, Xraw_selected_val, \
+    #yfit_selected_train, yfit_selected_val, \
+    #yraw_selected_train, yraw_selected_val = train_test_split(
+    #        Xfit_selected_train, Xraw_selected_train, yfit_selected_train, yraw_selected_train,
+    #        test_size=0.15, random_state=42)
+    
+    pairs, pair_id = np.unique(Xraw_selected[:, :2], axis=0, return_inverse=True)
+    pair_id = pair_id.ravel()
+    p_trval, p_test = train_test_split(np.arange(len(pairs)), test_size=0.2, random_state=42)
+    p_train, p_val = train_test_split(p_trval, test_size=0.15, random_state=42)
+    m_train, m_val, m_test = (np.isin(pair_id, p) for p in (p_train, p_val, p_test))
+
+    Xraw_selected_train, Xraw_selected_val, Xraw_selected_test = Xraw_selected[m_train], Xraw_selected[m_val], Xraw_selected[m_test]
+    yraw_selected_train, yraw_selected_val, yraw_selected_test = yraw_selected[m_train], yraw_selected[m_val], yraw_selected[m_test]
+    Xfit_selected_train, Xfit_selected_val, Xfit_selected_test = Xfit_selected[m_train], Xfit_selected[m_val], Xfit_selected[m_test]
+    yfit_selected_train, yfit_selected_val, yfit_selected_test = yfit_selected[m_train], yfit_selected[m_val], yfit_selected[m_test]
+    print(f"Curves: train {len(p_train)}, val {len(p_val)}, test {len(p_test)}")
+    print("Test curves (j1, j2):", [tuple(p) for p in pairs[np.sort(p_test)]])
             
     np.savez('train_test_data.npz',
              Xraw_selected_train=Xraw_selected_train, yraw_selected_train=yraw_selected_train,
