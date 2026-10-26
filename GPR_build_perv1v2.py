@@ -132,7 +132,6 @@ if __name__ == "__main__":
 
     print("\n--- Scaling Data ---")
     scalerX = StandardScaler().fit(Xraw_selected_train)
-    scale_pairs = lambda P: (P - scalerX.mean_[:2]) / scalerX.scale_[:2]    # (j1, j2) only
     Xraw_selected_train_scaled = scalerX.transform(Xraw_selected_train)
     Xraw_selected_test_scaled  = scalerX.transform(Xraw_selected_test)
     Xfit_selected_train_scaled = scalerX.transform(Xfit_selected_train)
@@ -150,11 +149,11 @@ if __name__ == "__main__":
         pickle.dump(scalerX, fh)
 
     # Build model using defined architecture
-        print("\n--- STAGE 1: PCA + GP base on Fitted Data ---")
+    print("\n--- STAGE 1: PCA + GP base on Fitted Data ---")
     egrid = np.unique(Xfit_selected[:, 2])                 # common energy grid
     n_e = len(egrid)
 
-    P_train, Yfit_train = curves_matrix(Xfit_selected_train, yfit_selected_train)
+    P_train, Yfit_train = curves_matrix(Xfit_selected_train, yfit_selected_train, egrid)
     mean_curve = Yfit_train.mean(axis=0)
     _, sv, Vt = np.linalg.svd(Yfit_train - mean_curve, full_matrices=False)
 
@@ -171,11 +170,11 @@ if __name__ == "__main__":
     for k in range(n_comp):
         kernel = C(1.0) * Matern(length_scale=[1.0, 1.0], nu=2.5) + WhiteKernel(1e-5, (1e-10, 1e-1))
         gp = GaussianProcessRegressor(kernel, normalize_y=True, n_restarts_optimizer=3, random_state=0)
-        gp.fit(scale_pairs(P_train), coef_train[:, k])
+        gp.fit(scale_pairs(P_train, scalerX), coef_train[:, k])
         base_gps.append(gp)
         print(f"  component {k}: {gp.kernel_}")
 
-        print("\n--- STAGE 2: GP correction on raw residuals ---")
+    print("\n--- STAGE 2: GP correction on raw residuals ---")
     N_PER_CURVE = 40     # raw residuals per training curve, denser at low energy
     pick = np.unique(np.round(np.linspace(0, 1, N_PER_CURVE) ** 2 * (n_e - 1)).astype(int))
     sub = (np.arange(len(P_train))[:, None] * n_e + pick[None, :]).ravel()
@@ -190,6 +189,6 @@ if __name__ == "__main__":
     print(f"  systematic amplitude {np.sqrt(k.k1.k1.constant_value) * r_std:.4f}, "
           f"noise {np.sqrt(k.k2.noise_level) * r_std:.4f} (relative units)")
 
-    joblib.dump({'scalerX': scalerX, 'S': S, 'egrid': egrid, 'mean_curve': mean_curve,
-                 'components': components, 'base_gps': base_gps, 'corr_gp': corr_gp},
-                'gpr_two_stage.joblib')
+    gpr = {'scalerX': scalerX, 'S': S, 'egrid': egrid, 'mean_curve': mean_curve,
+           'components': components, 'base_gps': base_gps, 'corr_gp': corr_gp}
+    joblib.dump(gpr, 'gpr_two_stage.joblib')
