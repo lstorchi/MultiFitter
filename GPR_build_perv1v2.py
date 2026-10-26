@@ -192,11 +192,12 @@ if __name__ == "__main__":
         print(f"  component {k}: {gp.kernel_}")
 
     print("\n--- STAGE 2: GP correction on raw residuals ---")
-    N_PER_CURVE = 40     # raw residuals per training curve, denser at low energy
-    pick = np.unique(np.round(np.linspace(0, 1, N_PER_CURVE) ** 2 * (n_e - 1)).astype(int))
-    sub = (np.arange(len(P_train))[:, None] * n_e + pick[None, :]).ravel()
-    print(f"GP correction on {len(sub)} points")
-
+    E_CORR_MAX = 300.0   # the correction is learned only below this energy
+    STEP = 4             # every 4th grid energy (~8 units apart), well below the ~13-unit length scale
+    e_idx = np.where(egrid < E_CORR_MAX)[0][::STEP]
+    sub = (np.arange(len(P_train))[:, None] * n_e + e_idx[None, :]).ravel()
+    print(f"GP correction on {len(sub)} points ({len(e_idx)} energies per curve, E < {E_CORR_MAX:g})")
+    
     #kernel = C(0.1) * Matern(length_scale=[1.0, 1.0, 1.0], nu=2.5) + WhiteKernel(0.1, (1e-6, 1e1))
     kernel = C(0.1) * Matern(length_scale=[1.0, 1.0, 1.0],
                              length_scale_bounds=[(0.1, 100.0), (0.1, 100.0), (0.05, 100.0)], nu=2.5) \
@@ -210,5 +211,6 @@ if __name__ == "__main__":
           f"noise {np.sqrt(k.k2.noise_level) * r_std:.4f} (relative units)")
 
     gpr = {'scalerX': scalerX, 'S': S, 'egrid': egrid, 'mean_curve': mean_curve,
-           'components': components, 'base_gps': base_gps, 'corr_gp': corr_gp}
+           'components': components, 'base_gps': base_gps, 'corr_gp': corr_gp,
+           'e_taper': (200.0, 300.0)}
     joblib.dump(gpr, 'gpr_two_stage.joblib')
