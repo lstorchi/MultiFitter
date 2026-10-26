@@ -35,4 +35,12 @@ PER v1v2 models
 
 3.  GPR
 
+    We use a two-stage GPR model. First, PCA reduces each fitted curve to a few component 
+    coefficients, and one Gaussian process per component predicts its coefficient from (j1, 
+    j2), so any curve, including new ones, is rebuilt as the mean curve plus the predicted 
+    components. Second, a Gaussian process over (j1, j2, E) learns the relative deviation of 
+    the raw data from the fit, r = (raw − fit)/(fit + s), and the final prediction is ŷ = 
+    y_base + (y_base + s)·Δ, clipped at zero, with uncertainty bands available from both stages.
+
+
     GPR_build_perv1v2.py : build model

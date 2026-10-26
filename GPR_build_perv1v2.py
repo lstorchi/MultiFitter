@@ -155,6 +155,13 @@ if __name__ == "__main__":
 
     R = r_train.reshape(-1, n_e)              # one row per training curve (needs n_e defined first)
     common = R.mean(axis=0)                   # average residual at each energy
+    jitter = np.std(np.diff(common)) / np.sqrt(2)
+    print(f"per-energy average: total std {common.std():.4f}, point-to-point jitter {jitter:.4f}")
+    plt.figure(figsize=(10, 4))
+    plt.plot(egrid, common, lw=0.8)
+    plt.axhline(0, color='k', lw=0.5)
+    plt.xlabel('Energy'); plt.ylabel('mean relative residual over curves')
+    plt.savefig('common_residual.png', dpi=110); plt.close()
     print(f"single-curve residual std {R.std():.4f}, per-energy average std {common.std():.4f}, "
           f"expected if independent {R.std() / np.sqrt(R.shape[0]):.4f}")
 
