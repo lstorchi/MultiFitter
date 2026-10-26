@@ -44,3 +44,4 @@ PER v1v2 models
 
 
     GPR_build_perv1v2.py : build model
+    GPR_test_perv1v2.py : test model

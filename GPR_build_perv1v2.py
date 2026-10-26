@@ -39,10 +39,12 @@ def predict_base(X, gpr):
     return out
 
 def predict_two_stage(X, gpr):
-    """Base + GP correction at arbitrary (j1, j2, es) rows."""
+    """Base + GP correction; the correction fades to 0 over gpr['e_taper'] (default 200-300)."""
     y_base = predict_base(X, gpr)
     Xs = gpr['scalerX'].transform(X)
     delta = np.concatenate([gpr['corr_gp'].predict(Xs[i:i + 5000]) for i in range(0, len(Xs), 5000)])
+    e0, e1 = gpr.get('e_taper', (200.0, 300.0))
+    delta *= np.clip((e1 - X[:, 2]) / (e1 - e0), 0.0, 1.0)
     return np.clip(y_base + (y_base + gpr['S']) * delta, 0, None)
 
 if __name__ == "__main__":
