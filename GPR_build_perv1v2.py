@@ -153,6 +153,11 @@ if __name__ == "__main__":
     egrid = np.unique(Xfit_selected[:, 2])                 # common energy grid
     n_e = len(egrid)
 
+    R = r_train.reshape(-1, n_e)              # one row per training curve (needs n_e defined first)
+    common = R.mean(axis=0)                   # average residual at each energy
+    print(f"single-curve residual std {R.std():.4f}, per-energy average std {common.std():.4f}, "
+          f"expected if independent {R.std() / np.sqrt(R.shape[0]):.4f}")
+
     P_train, Yfit_train = curves_matrix(Xfit_selected_train, yfit_selected_train, egrid)
     mean_curve = Yfit_train.mean(axis=0)
     _, sv, Vt = np.linalg.svd(Yfit_train - mean_curve, full_matrices=False)
@@ -182,7 +187,10 @@ if __name__ == "__main__":
     sub = (np.arange(len(P_train))[:, None] * n_e + pick[None, :]).ravel()
     print(f"GP correction on {len(sub)} points")
 
-    kernel = C(0.1) * Matern(length_scale=[1.0, 1.0, 1.0], nu=2.5) + WhiteKernel(0.1, (1e-6, 1e1))
+    #kernel = C(0.1) * Matern(length_scale=[1.0, 1.0, 1.0], nu=2.5) + WhiteKernel(0.1, (1e-6, 1e1))
+    kernel = C(0.1) * Matern(length_scale=[1.0, 1.0, 1.0],
+                             length_scale_bounds=[(0.1, 100.0), (0.1, 100.0), (0.05, 100.0)], nu=2.5) \
+             + WhiteKernel(0.1, (1e-6, 1e1))
     corr_gp = GaussianProcessRegressor(kernel, normalize_y=True, n_restarts_optimizer=2, random_state=0)
     corr_gp.fit(scalerX.transform(Xraw_selected_train[sub]), r_train[sub])
     k = corr_gp.kernel_
