@@ -117,7 +117,8 @@ if __name__ == "__main__":
              Xfit_selected_train=Xfit_selected_train, yfit_selected_train=yfit_selected_train,
              Xfit_selected_test=Xfit_selected_test, yfit_selected_test=yfit_selected_test,
              Xfit_selected_val=Xfit_selected_val, yfit_selected_val=yfit_selected_val,
-             Xraw_selected_val=Xraw_selected_val, yraw_selected_val=yraw_selected_val
+             Xraw_selected_val=Xraw_selected_val, yraw_selected_val=yraw_selected_val,
+             p_train=p_train, p_val=p_val, p_test=p_test
              )
 
     print("\n--- Scaling Data ---")
