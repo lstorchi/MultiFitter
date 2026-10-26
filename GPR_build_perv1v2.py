@@ -41,7 +41,8 @@ def predict_base(X, gpr):
 def predict_two_stage(X, gpr):
     """Base + GP correction at arbitrary (j1, j2, es) rows."""
     y_base = predict_base(X, gpr)
-    delta = gpr['corr_gp'].predict(gpr['scalerX'].transform(X))
+    Xs = gpr['scalerX'].transform(X)
+    delta = np.concatenate([gpr['corr_gp'].predict(Xs[i:i + 5000]) for i in range(0, len(Xs), 5000)])
     return np.clip(y_base + (y_base + gpr['S']) * delta, 0, None)
 
 if __name__ == "__main__":
