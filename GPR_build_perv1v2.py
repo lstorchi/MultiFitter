@@ -168,7 +168,9 @@ if __name__ == "__main__":
 
     base_gps = []
     for k in range(n_comp):
-        kernel = C(1.0) * Matern(length_scale=[1.0, 1.0], nu=2.5) + WhiteKernel(1e-5, (1e-10, 1e-1))
+        #kernel = C(1.0) * Matern(length_scale=[1.0, 1.0], nu=2.5) + WhiteKernel(1e-5, (1e-10, 1e-1))
+        kernel = C(1.0) * Matern(length_scale=[1.0, 1.0], length_scale_bounds=(0.1, 100.0), nu=2.5) \
+                 + WhiteKernel(1e-5, (1e-10, 1.0))
         gp = GaussianProcessRegressor(kernel, normalize_y=True, n_restarts_optimizer=3, random_state=0)
         gp.fit(scale_pairs(P_train, scalerX), coef_train[:, k])
         base_gps.append(gp)
