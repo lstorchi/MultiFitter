@@ -42,6 +42,5 @@ PER v1v2 models
     the raw data from the fit, r = (raw − fit)/(fit + s), and the final prediction is ŷ = 
     y_base + (y_base + s)·Δ, clipped at zero, with uncertainty bands available from both stages.
 
-
     GPR_build_perv1v2.py : build model
     GPR_test_perv1v2.py : test model
